@@ -1,14 +1,16 @@
+
 import { useState, useEffect, useContext } from "react";
 import {
   collection,
   addDoc,
   query,
   where,
-  getDocs,
+  onSnapshot,
   Timestamp,
   doc,
   updateDoc,
   increment,
+  orderBy,
 } from "firebase/firestore";
 
 import { db } from "../firebase/config";
@@ -24,28 +26,23 @@ function AnswerCard({ answer }) {
   const [replies, setReplies] = useState([]);
 
   useEffect(() => {
-    fetchReplies();
-  }, []);
+    const q = query(
+      collection(db, "replies"),
+      where("answerId", "==", answer.id),
+      orderBy("createdAt", "desc")
+    );
 
-  const fetchReplies = async () => {
-    try {
-      const q = query(
-        collection(db, "replies"),
-        where("answerId", "==", answer.id)
-      );
-
-      const querySnapshot = await getDocs(q);
-
-      const data = querySnapshot.docs.map((doc) => ({
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
 
       setReplies(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    });
+
+    return () => unsubscribe();
+  }, [answer.id]);
 
   const handleReply = async (e) => {
     e.preventDefault();
@@ -61,14 +58,14 @@ function AnswerCard({ answer }) {
       await addDoc(collection(db, "replies"), {
         answerId: answer.id,
         reply: replyText,
-        author: currentUser.displayName,
+        author:
+          currentUser.displayName ||
+          currentUser.email,
         authorId: currentUser.uid,
         createdAt: Timestamp.now(),
       });
 
       setReplyText("");
-
-      fetchReplies();
     } catch (error) {
       console.log(error);
     }
@@ -99,13 +96,22 @@ function AnswerCard({ answer }) {
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-5">
-        <h3 className="font-bold text-xl">
-          {answer.author}
-        </h3>
+        <div>
+          <h3 className="font-bold text-xl">
+            {answer.author}
+          </h3>
+
+          <p className="text-sm text-gray-400">
+            {answer.createdAt?.toDate().toLocaleString()}
+          </p>
+        </div>
 
         <button
           onClick={handleUpvote}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl"
+          className="
+            bg-blue-600 hover:bg-blue-700
+            text-white px-5 py-2 rounded-xl
+          "
         >
           👍 {answer.upvotes || 0}
         </button>
@@ -130,12 +136,22 @@ function AnswerCard({ answer }) {
           onChange={(e) =>
             setReplyText(e.target.value)
           }
-          className="flex-1 p-4 rounded-xl border outline-none text-black"
+          className="
+            flex-1
+            p-4
+            rounded-xl
+            border
+            outline-none
+            text-black
+          "
         />
 
         <button
           type="submit"
-          className="bg-green-600 hover:bg-green-700 text-white px-6 rounded-xl"
+          className="
+            bg-green-600 hover:bg-green-700
+            text-white px-6 rounded-xl
+          "
         >
           Reply
         </button>
@@ -161,3 +177,4 @@ function AnswerCard({ answer }) {
 }
 
 export default AnswerCard;
+

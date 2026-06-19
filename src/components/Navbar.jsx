@@ -18,8 +18,6 @@ function Navbar() {
     try {
       await signOut(auth);
 
-      alert("Logged out successfully!");
-
       navigate("/");
     } catch (error) {
       console.log(error);
@@ -28,7 +26,7 @@ function Navbar() {
 
   return (
     <nav
-      className={`shadow-lg px-8 py-4 flex justify-between items-center ${
+      className={`shadow-lg px-8 py-4 flex justify-between items-center sticky top-0 z-50 ${
         darkMode
           ? "bg-slate-800 text-white"
           : "bg-white text-black"
@@ -39,36 +37,78 @@ function Navbar() {
         to="/"
         className="text-3xl font-bold text-blue-600"
       >
-        Placement Community
+        CIT Placement Community
       </Link>
 
       {/* Menu */}
       <div className="flex items-center gap-6 font-medium">
 
-        <Link to="/">🏠 Home</Link>
+        <Link
+          to="/"
+          className="hover:text-blue-600"
+        >
+          🏠 Home
+        </Link>
 
-        <Link to="/ask">❓ Ask Question</Link>
+        <Link
+          to="/ask"
+          className="hover:text-blue-600"
+        >
+          ❓ Ask Question
+        </Link>
 
-        <Link to="/publicchat">💬 Public Chat</Link>
+        <Link
+          to="/publicchat"
+          className="hover:text-blue-600"
+        >
+          💬 Public Chat
+        </Link>
 
-        <Link to="/chat">🔒 Private Chat</Link>
+        <Link
+          to="/chat"
+          className="hover:text-blue-600"
+        >
+          🔒 Private Chat
+        </Link>
 
-        <Link to="/notifications">🔔 Notifications</Link>
+        <Link
+          to="/notifications"
+          className="hover:text-blue-600"
+        >
+          🔔 Notifications
+        </Link>
 
-        <Link to="/profile">👤 Profile</Link>
+        <Link
+          to="/profile"
+          className="hover:text-blue-600"
+        >
+          👤 Profile
+        </Link>
 
         {!currentUser ? (
           <>
             <Link
               to="/login"
-              className="bg-green-500 text-white px-4 py-2 rounded-xl"
+              className="
+                bg-green-500
+                hover:bg-green-600
+                text-white
+                px-4 py-2
+                rounded-xl
+              "
             >
               Login
             </Link>
 
             <Link
               to="/register"
-              className="bg-blue-600 text-white px-4 py-2 rounded-xl"
+              className="
+                bg-blue-600
+                hover:bg-blue-700
+                text-white
+                px-4 py-2
+                rounded-xl
+              "
             >
               Register
             </Link>
@@ -76,7 +116,13 @@ function Navbar() {
         ) : (
           <button
             onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-xl"
+            className="
+              bg-red-500
+              hover:bg-red-600
+              text-white
+              px-4 py-2
+              rounded-xl
+            "
           >
             Logout
           </button>
@@ -84,7 +130,13 @@ function Navbar() {
 
         <button
           onClick={toggleTheme}
-          className="bg-indigo-500 text-white px-4 py-2 rounded-xl"
+          className="
+            bg-indigo-500
+            hover:bg-indigo-600
+            text-white
+            px-4 py-2
+            rounded-xl
+          "
         >
           {darkMode ? "☀ Light" : "🌙 Dark"}
         </button>

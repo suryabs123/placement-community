@@ -1,5 +1,11 @@
+
 import { useEffect, useState, useContext } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
 import { Link } from "react-router-dom";
 
 import { db } from "../firebase/config";
@@ -12,25 +18,22 @@ function Home() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetchQuestions();
-  }, []);
+    const q = query(
+      collection(db, "questions"),
+      orderBy("createdAt", "desc")
+    );
 
-  const fetchQuestions = async () => {
-    try {
-      const querySnapshot = await getDocs(
-        collection(db, "questions")
-      );
-
-      const data = querySnapshot.docs.map((doc) => ({
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
 
       setQuestions(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const filteredQuestions = questions.filter((question) =>
     question.title
@@ -47,9 +50,10 @@ function Home() {
       }`}
     >
       <div className="max-w-6xl mx-auto">
+
         {/* Heading */}
         <h1 className="text-5xl font-bold text-blue-600 mb-3">
-          Placement Community
+          CIT Placement Community
         </h1>
 
         <p className="text-gray-500 mb-8">
@@ -59,12 +63,20 @@ function Home() {
         {/* Search */}
         <input
           type="text"
-          placeholder="Search Questions..."
+          placeholder="🔍 Search Previous Posts..."
           value={search}
           onChange={(e) =>
             setSearch(e.target.value)
           }
-          className="w-full p-4 rounded-2xl border outline-none text-black mb-10"
+          className="
+            w-full
+            p-4
+            rounded-2xl
+            border
+            outline-none
+            text-black
+            mb-10
+          "
         />
 
         {/* Questions */}
@@ -77,8 +89,12 @@ function Home() {
             }`}
           >
             <h2 className="text-2xl font-bold">
-              No Questions Found
+              No matching posts found.
             </h2>
+
+            <p className="text-gray-500 mt-3">
+              Try searching with different keywords.
+            </p>
           </div>
         ) : (
           filteredQuestions.map((question) => (
@@ -90,21 +106,31 @@ function Home() {
                   : "bg-white"
               }`}
             >
+              {/* Title */}
               <h2 className="text-2xl font-bold mb-4">
                 {question.title}
               </h2>
 
-              <p className="text-gray-500 mb-5">
+              {/* Description */}
+              <p className="text-gray-500 mb-6">
                 {question.description}
               </p>
 
-              <div className="flex justify-between items-center">
+              {/* Footer */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
+
                 <div>
                   <h4 className="font-semibold">
                     Asked by:
                   </h4>
 
                   <p>{question.author}</p>
+
+                  <small className="text-gray-500">
+                    {question.createdAt
+                      ?.toDate()
+                      .toLocaleString()}
+                  </small>
                 </div>
 
                 <div className="flex items-center gap-5">
@@ -114,18 +140,28 @@ function Home() {
 
                   <Link
                     to={`/question/${question.id}`}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl"
+                    className="
+                      bg-blue-600
+                      hover:bg-blue-700
+                      text-white
+                      px-6
+                      py-3
+                      rounded-xl
+                    "
                   >
                     View Discussion
                   </Link>
                 </div>
+
               </div>
             </div>
           ))
         )}
+
       </div>
     </div>
   );
 }
 
 export default Home;
+

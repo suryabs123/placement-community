@@ -1,9 +1,11 @@
+
 import { useContext, useEffect, useState } from "react";
 import {
   collection,
   query,
   where,
-  getDocs,
+  onSnapshot,
+  orderBy,
 } from "firebase/firestore";
 
 import { db } from "../firebase/config";
@@ -17,30 +19,25 @@ function Notifications() {
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    if (currentUser) {
-      fetchNotifications();
-    }
-  }, [currentUser]);
+    if (!currentUser) return;
 
-  const fetchNotifications = async () => {
-    try {
-      const q = query(
-        collection(db, "notifications"),
-        where("userId", "==", currentUser.uid)
-      );
+    const q = query(
+      collection(db, "notifications"),
+      where("userId", "==", currentUser.uid),
+      orderBy("createdAt", "desc")
+    );
 
-      const querySnapshot = await getDocs(q);
-
-      const data = querySnapshot.docs.map((doc) => ({
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
 
       setNotifications(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    });
+
+    return () => unsubscribe();
+  }, [currentUser]);
 
   if (!currentUser) {
     return (
@@ -133,7 +130,9 @@ function Notifications() {
                   </p>
 
                   <small className="text-gray-500">
-                    Notification
+                    {notification.createdAt
+                      ?.toDate()
+                      .toLocaleString()}
                   </small>
                 </div>
 
@@ -148,3 +147,4 @@ function Notifications() {
 }
 
 export default Notifications;
+

@@ -1,3 +1,4 @@
+
 import { useState, useContext } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/config";
@@ -26,8 +27,6 @@ function Login() {
         password
       );
 
-      alert("Login Successful!");
-
       navigate("/");
     } catch (error) {
       alert(error.message);
@@ -52,7 +51,7 @@ function Login() {
         }`}
       >
         <h1 className="text-4xl font-bold text-center text-blue-600 mb-2">
-          Placement Community
+          CIT Placement Community
         </h1>
 
         <h2 className="text-2xl text-center mb-8">
@@ -85,6 +84,15 @@ function Login() {
             required
           />
 
+          <div className="text-right">
+            <Link
+              to="/forgotpassword"
+              className="text-blue-500"
+            >
+              Forgot Password?
+            </Link>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -93,6 +101,18 @@ function Login() {
             {loading
               ? "Logging in..."
               : "Login"}
+          </button>
+
+          <button
+            type="button"
+            className="
+              w-full
+              border
+              p-4
+              rounded-xl
+            "
+          >
+            Continue with Google
           </button>
         </form>
 
@@ -114,3 +134,4 @@ function Login() {
 }
 
 export default Login;
+

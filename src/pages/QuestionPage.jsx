@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 
@@ -8,8 +9,9 @@ import {
   collection,
   query,
   where,
-  getDocs,
+  onSnapshot,
   Timestamp,
+  orderBy,
 } from "firebase/firestore";
 
 import { db } from "../firebase/config";
@@ -30,8 +32,24 @@ function QuestionPage() {
 
   useEffect(() => {
     fetchQuestion();
-    fetchAnswers();
-  }, []);
+
+    const q = query(
+      collection(db, "answers"),
+      where("questionId", "==", id),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setAnswers(data);
+    });
+
+    return () => unsubscribe();
+  }, [id]);
 
   const fetchQuestion = async () => {
     try {
@@ -50,26 +68,6 @@ function QuestionPage() {
     }
   };
 
-  const fetchAnswers = async () => {
-    try {
-      const q = query(
-        collection(db, "answers"),
-        where("questionId", "==", id)
-      );
-
-      const querySnapshot = await getDocs(q);
-
-      const data = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setAnswers(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   const handleAnswer = async (e) => {
     e.preventDefault();
 
@@ -81,33 +79,18 @@ function QuestionPage() {
     if (!answer.trim()) return;
 
     try {
-      // Add answer
       await addDoc(collection(db, "answers"), {
         questionId: id,
         answer,
-        author: currentUser.displayName,
+        author:
+          currentUser.displayName ||
+          currentUser.email,
         authorId: currentUser.uid,
         createdAt: Timestamp.now(),
         upvotes: 0,
       });
 
-      // Notification
-      if (
-        question &&
-        question.authorId &&
-        question.authorId !== currentUser.uid
-      ) {
-        await addDoc(collection(db, "notifications"), {
-          userId: question.authorId,
-          message: `${currentUser.displayName} answered your question.`,
-          createdAt: Timestamp.now(),
-          isRead: false,
-        });
-      }
-
       setAnswer("");
-
-      fetchAnswers();
     } catch (error) {
       console.log(error);
     }
@@ -140,9 +123,13 @@ function QuestionPage() {
               {question.description}
             </p>
 
-            <h4 className="font-semibold">
-              Asked by: {question.author}
-            </h4>
+            <div className="text-sm text-gray-400">
+              Asked by {question.author}
+              <br />
+              {question.createdAt
+                ?.toDate()
+                .toLocaleString()}
+            </div>
           </div>
         )}
 
@@ -153,7 +140,7 @@ function QuestionPage() {
 
         {answers.length === 0 ? (
           <div
-            className={`p-6 rounded-2xl shadow-xl mb-10 ${
+            className={`p-8 rounded-3xl shadow-xl mb-10 ${
               darkMode
                 ? "bg-slate-800"
                 : "bg-white"
@@ -172,19 +159,19 @@ function QuestionPage() {
 
         {/* Write Answer */}
         <div
-          className={`p-8 rounded-3xl shadow-xl ${
+          className={`p-8 rounded-3xl shadow-xl mt-10 ${
             darkMode
               ? "bg-slate-800"
               : "bg-white"
           }`}
         >
-          <h2 className="text-2xl font-bold mb-6">
+          <h2 className="text-3xl font-bold mb-6">
             Write Your Answer
           </h2>
 
           <form
             onSubmit={handleAnswer}
-            className="space-y-5"
+            className="space-y-6"
           >
             <textarea
               rows="6"
@@ -193,12 +180,17 @@ function QuestionPage() {
               onChange={(e) =>
                 setAnswer(e.target.value)
               }
-              className="w-full p-4 rounded-xl border outline-none text-black"
+              className="
+                w-full p-5 rounded-2xl
+                border outline-none text-black
+              "
             />
 
             <button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl"
+              className="
+                bg-blue-600 hover:bg-blue-700
+                text-white px-8 py-4 rounded-2xl
+              "
             >
               Post Answer
             </button>
@@ -211,3 +203,4 @@ function QuestionPage() {
 }
 
 export default QuestionPage;
+

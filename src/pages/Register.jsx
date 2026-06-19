@@ -1,3 +1,4 @@
+
 import { useState, useContext } from "react";
 import {
   createUserWithEmailAndPassword,
@@ -56,8 +57,6 @@ function Register() {
         }
       );
 
-      alert("Account created successfully!");
-
       navigate("/login");
     } catch (error) {
       alert(error.message);
@@ -82,12 +81,16 @@ function Register() {
         }`}
       >
         <h1 className="text-4xl font-bold text-center text-blue-600 mb-2">
-          Placement Community
+          CIT Placement Community
         </h1>
 
-        <h2 className="text-2xl text-center mb-8">
+        <h2 className="text-2xl text-center mb-4">
           Create Account 🚀
         </h2>
+
+        <p className="text-center text-gray-500 mb-8">
+          Any valid email address can be used.
+        </p>
 
         <form
           onSubmit={handleRegister}
@@ -155,3 +158,4 @@ function Register() {
 }
 
 export default Register;
+

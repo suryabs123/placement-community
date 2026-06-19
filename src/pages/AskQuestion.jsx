@@ -1,5 +1,9 @@
 import { useState, useContext } from "react";
-import { addDoc, collection, Timestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  Timestamp,
+} from "firebase/firestore";
 
 import { db } from "../firebase/config";
 import { AuthContext } from "../context/AuthContext";
@@ -11,6 +15,7 @@ function AskQuestion() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,18 +34,30 @@ function AskQuestion() {
       await addDoc(collection(db, "questions"), {
         title,
         description,
-        author: currentUser.displayName,
+        author:
+          currentUser.displayName ||
+          currentUser.email,
+
         authorId: currentUser.uid,
+
         createdAt: Timestamp.now(),
+
         upvotes: 0,
       });
 
-      alert("Question posted successfully!");
-
       setTitle("");
       setDescription("");
+
+      setSuccess(
+        "✅ Question posted successfully!"
+      );
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
     } catch (error) {
       console.log(error);
+
       alert("Something went wrong");
     }
   };
@@ -64,6 +81,20 @@ function AskQuestion() {
           ❓ Ask a Question
         </h1>
 
+        {success && (
+          <div
+            className="
+              bg-green-100
+              text-green-700
+              p-4
+              rounded-xl
+              mb-6
+            "
+          >
+            {success}
+          </div>
+        )}
+
         <form
           onSubmit={handleSubmit}
           className="space-y-6"
@@ -80,7 +111,15 @@ function AskQuestion() {
               onChange={(e) =>
                 setTitle(e.target.value)
               }
-              className="w-full p-4 mt-2 rounded-xl border outline-none text-black"
+              className="
+                w-full
+                p-4
+                mt-2
+                rounded-xl
+                border
+                outline-none
+                text-black
+              "
             />
           </div>
 
@@ -96,7 +135,15 @@ function AskQuestion() {
               onChange={(e) =>
                 setDescription(e.target.value)
               }
-              className="w-full p-4 mt-2 rounded-xl border outline-none text-black"
+              className="
+                w-full
+                p-4
+                mt-2
+                rounded-xl
+                border
+                outline-none
+                text-black
+              "
             />
           </div>
 
