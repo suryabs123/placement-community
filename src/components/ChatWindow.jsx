@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useContext, useRef } from "react";
 import {
   collection,
@@ -6,6 +7,7 @@ import {
   where,
   onSnapshot,
   Timestamp,
+  orderBy,
 } from "firebase/firestore";
 
 import { db } from "../firebase/config";
@@ -30,7 +32,8 @@ function ChatWindow({ user }) {
   useEffect(() => {
     const q = query(
       collection(db, "messages"),
-      where("chatId", "==", chatId)
+      where("chatId", "==", chatId),
+      orderBy("createdAt", "asc")
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -138,6 +141,11 @@ function ChatWindow({ user }) {
           onChange={(e) =>
             setMessage(e.target.value)
           }
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSend();
+            }
+          }}
           className="
             flex-1
             p-4
@@ -166,3 +174,4 @@ function ChatWindow({ user }) {
 }
 
 export default ChatWindow;
+
