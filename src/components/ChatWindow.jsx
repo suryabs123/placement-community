@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useContext, useRef } from "react";
 import {
   collection,
@@ -55,10 +54,7 @@ function ChatWindow({ user }) {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!currentUser) {
-      alert("Please login first");
-      return;
-    }
+    if (!currentUser) return;
 
     if (!message.trim()) return;
 
@@ -89,14 +85,13 @@ function ChatWindow({ user }) {
     >
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-
         <div
           className="
-            w-14 h-14 rounded-full
-            bg-blue-600 text-white
-            flex items-center justify-center
-            text-2xl font-bold
-          "
+          w-14 h-14 rounded-full
+          bg-blue-600 text-white
+          flex items-center justify-center
+          text-2xl font-bold
+        "
         >
           {user.name?.charAt(0).toUpperCase()}
         </div>
@@ -110,7 +105,6 @@ function ChatWindow({ user }) {
             {user.email}
           </p>
         </div>
-
       </div>
 
       {/* Messages */}
@@ -147,24 +141,24 @@ function ChatWindow({ user }) {
             }
           }}
           className="
-            flex-1
-            p-4
-            rounded-2xl
-            border
-            outline-none
-            text-black
-          "
+          flex-1
+          p-4
+          rounded-2xl
+          border
+          outline-none
+          text-black
+        "
         />
 
         <button
           onClick={handleSend}
           className="
-            bg-blue-600
-            hover:bg-blue-700
-            text-white
-            px-8
-            rounded-2xl
-          "
+          bg-blue-600
+          hover:bg-blue-700
+          text-white
+          px-8
+          rounded-2xl
+        "
         >
           Send
         </button>
@@ -174,4 +168,3 @@ function ChatWindow({ user }) {
 }
 
 export default ChatWindow;
-

@@ -1,4 +1,3 @@
-
 import { useContext } from "react";
 import { ThemeContext } from "../context/ThemeContext";
 
@@ -59,4 +58,3 @@ function MessageBubble({ message, currentUser }) {
 }
 
 export default MessageBubble;
-

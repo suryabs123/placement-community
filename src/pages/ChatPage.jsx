@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useContext } from "react";
 import { collection, getDocs } from "firebase/firestore";
 
@@ -15,9 +16,11 @@ function ChatPage() {
   const [selectedUser, setSelectedUser] =
     useState(null);
 
+  const [search, setSearch] = useState("");
+
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentUser]);
 
   const fetchUsers = async () => {
     try {
@@ -39,6 +42,12 @@ function ChatPage() {
       console.log(error);
     }
   };
+
+  const filteredUsers = users.filter((user) =>
+    user.name
+      ?.toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
   return (
     <div
@@ -72,7 +81,7 @@ function ChatPage() {
           </div>
         ) : (
           <>
-            {/* Users */}
+            {/* User List */}
             <div
               className={`p-8 rounded-3xl shadow-xl mb-10 ${
                 darkMode
@@ -84,14 +93,39 @@ function ChatPage() {
                 Users
               </h2>
 
-              <div className="space-y-5">
-                {users.map((user) => (
+              {/* Search */}
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={search}
+                onChange={(e) =>
+                  setSearch(e.target.value)
+                }
+                className="
+                  w-full
+                  p-4
+                  rounded-2xl
+                  border
+                  outline-none
+                  text-black
+                  mb-6
+                "
+              />
+
+              <div className="space-y-4">
+                {filteredUsers.map((user) => (
                   <div
                     key={user.id}
                     onClick={() =>
                       setSelectedUser(user)
                     }
-                    className="cursor-pointer flex items-center justify-between p-5 rounded-2xl bg-gray-100 hover:bg-blue-100"
+                    className={`cursor-pointer flex items-center justify-between p-5 rounded-2xl transition ${
+                      selectedUser?.id === user.id
+                        ? "bg-blue-200"
+                        : darkMode
+                        ? "bg-slate-700 hover:bg-slate-600"
+                        : "bg-gray-100 hover:bg-blue-100"
+                    }`}
                   >
                     <div className="flex items-center gap-4">
 
@@ -113,7 +147,7 @@ function ChatPage() {
                           {user.name}
                         </h3>
 
-                        <p className="text-gray-500">
+                        <p className="text-gray-500 text-sm">
                           {user.email}
                         </p>
                       </div>
@@ -149,3 +183,4 @@ function ChatPage() {
 }
 
 export default ChatPage;
+
