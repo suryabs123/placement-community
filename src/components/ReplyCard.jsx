@@ -1,3 +1,4 @@
+// components/ReplyCard.jsx - Enhanced UI
 import { useContext } from "react";
 import { ThemeContext } from "../context/ThemeContext";
 
@@ -6,45 +7,30 @@ function ReplyCard({ reply }) {
 
   return (
     <div
-      className={`ml-8 mt-4 p-5 rounded-2xl border-l-4 shadow-md ${
+      className={`p-5 rounded-2xl transition-all duration-300 ${
         darkMode
-          ? "bg-slate-700 border-blue-500 text-white"
-          : "bg-gray-100 border-blue-500 text-black"
+          ? "bg-slate-700/50 border-l-4 border-[#6C63FF] hover:bg-slate-700"
+          : "bg-slate-50 border-l-4 border-[#6C63FF] hover:bg-slate-100"
       }`}
     >
-      <div className="flex items-center gap-4 mb-3">
-
-        {/* Avatar */}
-        <div
-          className="
-            w-12 h-12
-            rounded-full
-            bg-blue-600
-            text-white
-            flex items-center
-            justify-center
-            text-xl
-            font-bold
-          "
-        >
-          {reply.author?.charAt(0).toUpperCase()}
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6C63FF] to-[#3F3D9E] flex items-center justify-center text-white text-xs font-bold">
+          {reply.author?.charAt(0)?.toUpperCase() || "U"}
         </div>
-
-        {/* Author */}
         <div>
-          <h4 className="font-bold">
+          <h4 className={`font-semibold text-sm ${
+            darkMode ? "text-white" : "text-slate-800"
+          }`}>
             {reply.author}
           </h4>
-
-          <small className="text-gray-400">
-            Reply
-          </small>
+          <span className={`text-xs ${darkMode ? "text-slate-400" : "text-slate-400"}`}>
+            replied
+          </span>
         </div>
-
       </div>
-
-      {/* Reply Text */}
-      <p className="text-gray-400">
+      <p className={`text-sm ml-11 ${
+        darkMode ? "text-slate-300" : "text-slate-600"
+      }`}>
         {reply.reply}
       </p>
     </div>
