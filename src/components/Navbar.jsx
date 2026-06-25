@@ -34,11 +34,12 @@ function Navbar() {
 
   const navLinks = [
     { to: "/", label: "Home" },
-    { to: "/ask", label: "Ask Question" },
+    { to: "/ask", label: "Ask" },
+    { to: "/myquestions", label: "My Questions" },
     { to: "/publicchat", label: "Chat" },
     { to: "/chat", label: "Private" },
-    { to: "/notifications", label: "Alerts" },
-    { to: "/profile", label: "Profile" },
+    { to: "/notifications", label: "Alerts"},
+    { to: "/profile", label: "Profile"},
   ];
 
   return (
@@ -49,7 +50,7 @@ function Navbar() {
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          {/* Logo Section - Removed Green Dot */}
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
             <div className="relative">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 logo-hover">
@@ -59,7 +60,6 @@ function Navbar() {
                   className="w-full h-full object-contain animate-logo"
                 />
               </div>
-              {/* Green dot removed */}
             </div>
             <div>
               <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">

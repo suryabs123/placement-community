@@ -1,4 +1,3 @@
-// components/AnswerCard.jsx - Enhanced UI
 import { useState, useEffect, useContext } from "react";
 import {
   collection,
@@ -8,8 +7,7 @@ import {
   onSnapshot,
   Timestamp,
   doc,
-  updateDoc,
-  increment,
+  deleteDoc,
   orderBy,
 } from "firebase/firestore";
 import { db } from "../firebase/config";
@@ -23,7 +21,6 @@ function AnswerCard({ answer }) {
   const [replyText, setReplyText] = useState("");
   const [replies, setReplies] = useState([]);
   const [showReplyForm, setShowReplyForm] = useState(false);
-  const [isUpvoted, setIsUpvoted] = useState(false);
 
   useEffect(() => {
     const q = query(
@@ -51,7 +48,7 @@ function AnswerCard({ answer }) {
     try {
       await addDoc(collection(db, "replies"), {
         answerId: answer.id,
-        reply: replyText,
+        reply: replyText.trim(),
         author: currentUser.displayName || currentUser.email,
         authorId: currentUser.uid,
         createdAt: Timestamp.now(),
@@ -63,18 +60,18 @@ function AnswerCard({ answer }) {
     }
   };
 
-  const handleUpvote = async () => {
+  const handleDeleteReply = async (replyId) => {
     if (!currentUser) {
       alert("Please login first");
       return;
     }
-    try {
-      await updateDoc(doc(db, "answers", answer.id), {
-        upvotes: increment(1),
-      });
-      setIsUpvoted(true);
-    } catch (error) {
-      console.log(error);
+    if (window.confirm("Are you sure you want to delete this reply?")) {
+      try {
+        await deleteDoc(doc(db, "replies", replyId));
+      } catch (error) {
+        console.log(error);
+        alert("Failed to delete reply");
+      }
     }
   };
 
@@ -82,14 +79,14 @@ function AnswerCard({ answer }) {
     <div
       className={`p-6 sm:p-8 rounded-3xl transition-all duration-300 card-hover ${
         darkMode
-          ? "bg-slate-800/50 border border-white/5 hover:bg-slate-800"
+          ? "bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800"
           : "bg-white shadow-sm hover:shadow-xl border border-slate-100"
       }`}
     >
-      {/* Header */}
+      {/* Header - Removed Upvote */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6C63FF] to-[#3F3D9E] flex items-center justify-center text-white font-bold text-sm">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
             {answer.author?.charAt(0)?.toUpperCase() || "A"}
           </div>
           <div>
@@ -107,19 +104,7 @@ function AnswerCard({ answer }) {
             </p>
           </div>
         </div>
-        <button
-          onClick={handleUpvote}
-          disabled={isUpvoted}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
-            isUpvoted
-              ? "bg-green-500 text-white"
-              : darkMode
-              ? "bg-slate-700 hover:bg-[#6C63FF] text-slate-300 hover:text-white"
-              : "bg-slate-100 hover:bg-[#6C63FF] text-slate-600 hover:text-white"
-          }`}
-        >
-          👍 {answer.upvotes || 0}
-        </button>
+        {/* Upvote removed */}
       </div>
 
       {/* Answer */}
@@ -135,10 +120,10 @@ function AnswerCard({ answer }) {
       <button
         onClick={() => setShowReplyForm(!showReplyForm)}
         className={`text-sm font-medium transition-all duration-300 ${
-          darkMode ? "text-[#8B83FF] hover:text-[#6C63FF]" : "text-[#6C63FF] hover:text-[#5A52D5]"
+          darkMode ? "text-indigo-400 hover:text-indigo-300" : "text-indigo-600 hover:text-indigo-700"
         }`}
       >
-        {showReplyForm ? "− Hide Reply" : "+ Add Reply"}
+        {showReplyForm ? "− Hide Reply" : `+ Add Reply (${replies.length})`}
       </button>
 
       {/* Reply Form */}
@@ -154,13 +139,13 @@ function AnswerCard({ answer }) {
             onChange={(e) => setReplyText(e.target.value)}
             className={`flex-1 p-3 rounded-xl border-2 outline-none transition-all duration-300 ${
               darkMode
-                ? "input-modern-dark bg-slate-700/50 border-slate-600 focus:border-[#6C63FF]"
-                : "input-modern border-slate-200 focus:border-[#6C63FF]"
+                ? "bg-slate-700/50 border-slate-600 focus:border-indigo-500 text-white placeholder:text-slate-500"
+                : "border-slate-200 focus:border-indigo-500"
             }`}
           />
           <button
             type="submit"
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#00D2FF] to-[#6C63FF] text-white font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-[#6C63FF]/25 hover:scale-105"
+            className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/25 hover:scale-105"
           >
             Reply
           </button>
@@ -174,11 +159,16 @@ function AnswerCard({ answer }) {
             darkMode ? "text-white" : "text-slate-800"
           }`}>
             Replies ({replies.length})
-            <span className="w-1.5 h-1.5 rounded-full bg-[#6C63FF]"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
           </h4>
           <div className="space-y-3">
             {replies.map((reply) => (
-              <ReplyCard key={reply.id} reply={reply} />
+              <ReplyCard 
+                key={reply.id} 
+                reply={reply} 
+                onDelete={handleDeleteReply}
+                currentUser={currentUser}
+              />
             ))}
           </div>
         </>

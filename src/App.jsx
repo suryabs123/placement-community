@@ -12,6 +12,9 @@ import ChatPage from "./pages/ChatPage";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import MyQuestions from "./pages/MyQuestions";
+import UserProfile from "./pages/UserProfile";
+import ForgotPassword from "./pages/ForgotPassword";
 
 function App() {
   return (
@@ -25,10 +28,12 @@ function App() {
         {/* Authentication */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgotpassword" element={<ForgotPassword />} />
 
         {/* Questions */}
         <Route path="/ask" element={<AskQuestion />} />
         <Route path="/question/:id" element={<QuestionPage />} />
+        <Route path="/myquestions" element={<MyQuestions />} />
 
         {/* Chats */}
         <Route path="/publicchat" element={<PublicChat />} />
@@ -39,6 +44,7 @@ function App() {
 
         {/* Profile */}
         <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:userId" element={<UserProfile />} />
         <Route path="/editprofile" element={<EditProfile />} />
       </Routes>
     </BrowserRouter>

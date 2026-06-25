@@ -61,11 +61,13 @@ function Home() {
         .slice(0, 5);
       setTrendingQuestions(trending);
       
+      const totalAnswers = data.reduce((acc, q) => acc + (q.answersCount || 0), 0);
+      
       setStats(prev => ({
         ...prev,
         total: data.length,
         today: todayQuestions.length,
-        answers: data.reduce((acc, q) => acc + (q.answersCount || 0), 0),
+        answers: totalAnswers,
       }));
       
       setLoading(false);
@@ -97,7 +99,7 @@ function Home() {
     return () => unsubscribe();
   }, []);
 
-  // Real-time top contributors
+  // Real-time top contributors - Only users with > 50 contributions
   useEffect(() => {
     const fetchTopContributors = async () => {
       try {
@@ -118,6 +120,7 @@ function Home() {
                 id: authorId,
                 questions: 0,
                 answers: 0,
+                replies: 0,
               };
             }
             contributorMap[authorId].questions += 1;
@@ -136,27 +139,49 @@ function Home() {
                 id: authorId,
                 questions: 0,
                 answers: 0,
+                replies: 0,
               };
             }
             contributorMap[authorId].answers += 1;
           }
         });
 
+        const repliesSnapshot = await getDocs(collection(db, "replies"));
+        repliesSnapshot.docs.forEach(doc => {
+          const data = doc.data();
+          const authorId = data.authorId;
+          const authorName = data.author || "Unknown";
+          if (authorId) {
+            if (!contributorMap[authorId]) {
+              contributorMap[authorId] = {
+                name: authorName,
+                id: authorId,
+                questions: 0,
+                answers: 0,
+                replies: 0,
+              };
+            }
+            contributorMap[authorId].replies = (contributorMap[authorId].replies || 0) + 1;
+          }
+        });
+
         const contributors = Object.values(contributorMap).map(user => ({
           ...user,
-          total: (user.questions || 0) + (user.answers || 0),
+          total: (user.questions || 0) + (user.answers || 0) + (user.replies || 0),
         }));
 
-        const sorted = contributors
+        // Only show users with more than 50 contributions
+        const filtered = contributors.filter(user => user.total > 50);
+        
+        const sorted = filtered
           .sort((a, b) => b.total - a.total)
           .slice(0, 5);
 
         const withRoles = sorted.map((user, index) => {
           let role = "Member";
-          if (user.total > 5) role = "Active Member";
-          if (user.total > 10) role = "Expert";
-          if (user.total > 20) role = "Top Contributor";
-          if (index === 0 && user.total > 15) role = "🏆 Star Contributor";
+          if (user.total > 100) role = "🏆 Top Contributor";
+          else if (user.total > 70) role = "Expert";
+          else if (user.total > 50) role = "Active Member";
           return { ...user, role };
         });
 
@@ -443,7 +468,7 @@ function Home() {
                 </div>
               </div>
 
-              {/* Top Contributors */}
+              {/* Top Contributors - Only > 50 contributions */}
               <div className={`p-6 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
                 <h3 className={`font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                   🏆 Top Contributors
@@ -451,7 +476,11 @@ function Home() {
                 <div className="space-y-3">
                   {topContributors.length > 0 ? (
                     topContributors.map((user, index) => (
-                      <div key={user.id || index} className="flex items-center gap-3 p-2 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-all duration-300">
+                      <Link 
+                        key={user.id || index} 
+                        to={`/profile/${user.id}`}
+                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-all duration-300 cursor-pointer"
+                      >
                         <div className="relative">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${index === 0 ? "bg-amber-500" : index === 1 ? "bg-slate-400" : index === 2 ? "bg-orange-400" : "bg-indigo-500"}`}>
                             {user.name?.charAt(0)?.toUpperCase() || "U"}
@@ -472,11 +501,11 @@ function Home() {
                           <span className="text-xs font-bold text-indigo-500">{user.total || 0}</span>
                           <p className="text-[10px] text-slate-400">contrib</p>
                         </div>
-                      </div>
+                      </Link>
                     ))
                   ) : (
                     <div className={`text-sm ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      No contributors yet
+                      No contributors with 50+ contributions yet
                     </div>
                   )}
                 </div>
@@ -593,7 +622,7 @@ function Home() {
               )}
             </div>
 
-            {/* Questions Feed - No Vote Count */}
+            {/* Questions Feed - Removed 💬 0 answers */}
             {filteredQuestions.length === 0 ? (
               <div className={`p-16 rounded-3xl text-center ${darkMode ? "bg-slate-800/50 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
                 <div className="text-6xl mb-4 animate-bounce">🔍</div>
@@ -665,9 +694,7 @@ function Home() {
                             </span>
                           </div>
                           <span className={darkMode ? "text-slate-500" : "text-slate-400"}>•</span>
-                          <span className={darkMode ? "text-slate-400" : "text-slate-500"}>
-                            💬 {question.answersCount || 0} answers
-                          </span>
+                          {/* Removed 💬 0 answers */}
                         </div>
                       </div>
                     </div>
@@ -689,6 +716,10 @@ function Home() {
                   <Link to="/ask" className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all duration-300 ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"}`}>
                     <span className="text-xl">❓</span>
                     <span className={`text-sm font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>Ask Question</span>
+                  </Link>
+                  <Link to="/myquestions" className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all duration-300 ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"}`}>
+                    <span className="text-xl">📝</span>
+                    <span className={`text-sm font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>My Questions</span>
                   </Link>
                   <Link to="/publicchat" className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all duration-300 ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"}`}>
                     <span className="text-xl">💬</span>

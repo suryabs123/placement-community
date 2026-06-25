@@ -70,7 +70,7 @@ function Login() {
 
   return (
     <div className={`min-h-screen flex justify-center items-center px-4 pt-20 ${
-      darkMode ? "bg-slate-900" : "bg-gradient-to-br from-slate-50 via-white to-indigo-50/30"
+      darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"
     }`}>
       <div className={`w-full max-w-md p-8 sm:p-10 rounded-3xl transition-all duration-300 ${
         darkMode
@@ -86,21 +86,23 @@ function Login() {
               className="w-full h-full object-contain animate-logo"
             />
           </div>
-          <h1 className="text-2xl font-bold text-[#6C63FF]">CIT Placement Community</h1>
+          <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+            CIT Placement Community
+          </h1>
           <p className={`text-sm mt-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
             Sign in to continue
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm text-center">
             {error}
           </div>
         )}
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className={`text-sm font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>
+            <label className={`text-sm font-medium block mb-1.5 ${darkMode ? "text-slate-300" : "text-slate-700"}`}>
               Email Address
             </label>
             <input
@@ -108,23 +110,23 @@ function Login() {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={`w-full mt-1.5 p-4 rounded-xl border-2 outline-none transition-all duration-300 ${
+              className={`w-full p-4 rounded-xl border-2 outline-none transition-all duration-300 ${
                 darkMode
-                  ? "bg-slate-700/50 border-slate-600 focus:border-[#6C63FF] text-white placeholder:text-slate-500"
-                  : "border-slate-200 focus:border-[#6C63FF]"
+                  ? "bg-slate-700/50 border-slate-600 focus:border-indigo-500 text-white placeholder:text-slate-500"
+                  : "border-slate-200 focus:border-indigo-500"
               }`}
               required
             />
           </div>
 
           <div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-1.5">
               <label className={`text-sm font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>
                 Password
               </label>
               <Link
                 to="/forgotpassword"
-                className="text-sm text-[#6C63FF] hover:text-[#5A52D5] transition-colors"
+                className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors font-medium"
               >
                 Forgot?
               </Link>
@@ -134,10 +136,10 @@ function Login() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`w-full mt-1.5 p-4 rounded-xl border-2 outline-none transition-all duration-300 ${
+              className={`w-full p-4 rounded-xl border-2 outline-none transition-all duration-300 ${
                 darkMode
-                  ? "bg-slate-700/50 border-slate-600 focus:border-[#6C63FF] text-white placeholder:text-slate-500"
-                  : "border-slate-200 focus:border-[#6C63FF]"
+                  ? "bg-slate-700/50 border-slate-600 focus:border-indigo-500 text-white placeholder:text-slate-500"
+                  : "border-slate-200 focus:border-indigo-500"
               }`}
               required
             />
@@ -146,7 +148,7 @@ function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-[#6C63FF] to-[#3F3D9E] hover:shadow-lg hover:shadow-[#6C63FF]/25 transition-all duration-300 flex items-center justify-center gap-2"
+            className="w-full py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
@@ -202,7 +204,7 @@ function Login() {
 
         <p className={`text-center mt-8 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
           Don't have an account?{" "}
-          <Link to="/register" className="text-[#6C63FF] font-semibold hover:underline">
+          <Link to="/register" className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
             Create one
           </Link>
         </p>

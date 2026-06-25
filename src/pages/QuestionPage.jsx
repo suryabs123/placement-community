@@ -1,4 +1,3 @@
-// pages/QuestionPage.jsx - Enhanced UI
 import { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -11,6 +10,8 @@ import {
   onSnapshot,
   Timestamp,
   orderBy,
+  updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { AuthContext } from "../context/AuthContext";
@@ -28,18 +29,28 @@ function QuestionPage() {
 
   useEffect(() => {
     fetchQuestion();
+    
     const q = query(
       collection(db, "answers"),
       where("questionId", "==", id),
       orderBy("createdAt", "desc")
     );
+    
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
       setAnswers(data);
+      
+      // Update the question's answersCount in real-time
+      if (question) {
+        updateDoc(doc(db, "questions", id), {
+          answersCount: data.length,
+        }).catch(() => {});
+      }
     });
+    
     return () => unsubscribe();
   }, [id]);
 
@@ -67,47 +78,84 @@ function QuestionPage() {
       return;
     }
     if (!answer.trim()) return;
+    
     try {
       await addDoc(collection(db, "answers"), {
         questionId: id,
-        answer,
+        answer: answer.trim(),
         author: currentUser.displayName || currentUser.email,
         authorId: currentUser.uid,
         createdAt: Timestamp.now(),
         upvotes: 0,
       });
+      
       setAnswer("");
     } catch (error) {
       console.log(error);
     }
   };
 
+  const handleDeleteQuestion = async () => {
+    if (!currentUser) {
+      alert("Please login first");
+      return;
+    }
+    if (question && question.authorId !== currentUser.uid) {
+      alert("You can only delete your own questions");
+      return;
+    }
+    if (window.confirm("Are you sure you want to delete this question?")) {
+      try {
+        await deleteDoc(doc(db, "questions", id));
+        alert("Question deleted successfully!");
+        window.location.href = "/";
+      } catch (error) {
+        console.log(error);
+        alert("Failed to delete question");
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className={`min-h-screen flex justify-center items-center pt-20 ${
-        darkMode ? "bg-slate-900" : "bg-gradient-to-br from-slate-50 via-white to-indigo-50/30"
+        darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"
       }`}>
-        <div className="w-12 h-12 border-4 border-[#6C63FF]/30 border-t-[#6C63FF] rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-indigo-400/30 border-t-indigo-500 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
     <div className={`min-h-screen pt-20 ${
-      darkMode ? "bg-slate-900" : "bg-gradient-to-br from-slate-50 via-white to-indigo-50/30"
+      darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"
     }`}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         {/* Question */}
         {question && (
           <div className={`p-6 sm:p-8 rounded-3xl transition-all duration-300 card-hover mb-10 ${
             darkMode
-              ? "bg-slate-800/80 border border-white/5"
+              ? "bg-slate-800/80 border border-slate-700/50"
               : "bg-white/80 backdrop-blur-xl shadow-xl border border-white/20"
           }`}>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="badge badge-primary">📌 Question</span>
-              {question.createdAt?.toDate() > new Date(Date.now() - 24*60*60*1000) && (
-                <span className="badge badge-success">New</span>
+            <div className="flex items-center justify-between gap-2 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="badge badge-primary">📌 Question</span>
+                {question.createdAt?.toDate() > new Date(Date.now() - 24*60*60*1000) && (
+                  <span className="badge badge-success">New</span>
+                )}
+              </div>
+              {/* Delete Question Button - Only for author */}
+              {currentUser && question.authorId === currentUser.uid && (
+                <button
+                  onClick={handleDeleteQuestion}
+                  className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20"
+                  title="Delete Question"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
               )}
             </div>
             <h1 className={`text-3xl sm:text-4xl font-bold mb-4 ${
@@ -124,7 +172,7 @@ function QuestionPage() {
               darkMode ? "text-slate-400" : "text-slate-500"
             }`}>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6C63FF] to-[#3F3D9E] flex items-center justify-center text-white text-xs font-bold">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
                   {question.author?.charAt(0)?.toUpperCase() || "A"}
                 </div>
                 <span>{question.author}</span>
@@ -137,18 +185,16 @@ function QuestionPage() {
                 hour: "2-digit",
                 minute: "2-digit"
               })}</span>
-              <span>•</span>
-              <span>👍 {question.upvotes || 0}</span>
             </div>
           </div>
         )}
 
-        {/* Answers Section */}
+        {/* Answers Section - Removed "(0)" display */}
         <div className="flex items-center justify-between mb-8">
           <h2 className={`text-2xl sm:text-3xl font-bold ${
             darkMode ? "text-white" : "text-slate-800"
           }`}>
-            Answers ({answers.length})
+            Answers
           </h2>
           <span className={`text-sm ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
             {answers.length === 0 ? "Be the first to answer!" : `${answers.length} answers`}
@@ -158,7 +204,7 @@ function QuestionPage() {
         {answers.length === 0 ? (
           <div className={`p-8 sm:p-12 rounded-3xl text-center transition-all duration-300 ${
             darkMode
-              ? "bg-slate-800/50 border border-white/5"
+              ? "bg-slate-800/50 border border-slate-700/50"
               : "bg-white/80 backdrop-blur-xl shadow-xl border border-white/20"
           }`}>
             <div className="text-5xl mb-4">💭</div>
@@ -180,7 +226,7 @@ function QuestionPage() {
         {/* Write Answer */}
         <div className={`p-6 sm:p-8 rounded-3xl mt-10 transition-all duration-300 ${
           darkMode
-            ? "bg-slate-800/80 border border-white/5"
+            ? "bg-slate-800/80 border border-slate-700/50"
             : "bg-white/80 backdrop-blur-xl shadow-xl border border-white/20"
         }`}>
           <h2 className={`text-2xl sm:text-3xl font-bold mb-6 ${
@@ -196,13 +242,13 @@ function QuestionPage() {
               onChange={(e) => setAnswer(e.target.value)}
               className={`w-full p-5 rounded-2xl border-2 outline-none transition-all duration-300 ${
                 darkMode
-                  ? "input-modern-dark bg-slate-700/50 border-slate-600 focus:border-[#6C63FF]"
-                  : "input-modern border-slate-200 focus:border-[#6C63FF]"
+                  ? "bg-slate-700/50 border-slate-600 focus:border-indigo-500 text-white placeholder:text-slate-500"
+                  : "border-slate-200 focus:border-indigo-500"
               }`}
             />
             <button
               type="submit"
-              className="btn-primary flex items-center gap-2"
+              className="px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
               <span>📤</span> Post Answer
             </button>

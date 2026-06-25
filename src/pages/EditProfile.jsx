@@ -2,14 +2,8 @@ import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
-import {
-  doc,
-  getDoc,
-  updateDoc,
-} from "firebase/firestore";
-import {
-  updateProfile,
-} from "firebase/auth";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { updateProfile } from "firebase/auth";
 import { db, auth } from "../firebase/config";
 
 function EditProfile() {
@@ -19,7 +13,9 @@ function EditProfile() {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
 
   useEffect(() => {
     if (currentUser) {
@@ -45,129 +41,217 @@ function EditProfile() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+
     if (!currentUser) {
-      alert("Please login first");
+      showToastMessage("Please login first", "error");
       return;
     }
+
+    if (!name.trim()) {
+      showToastMessage("Name is required", "error");
+      return;
+    }
+
     try {
-      setSaving(true);
+      setLoading(true);
+      
       await updateProfile(auth.currentUser, {
-        displayName: name,
+        displayName: name.trim(),
       });
+
       await updateDoc(doc(db, "users", currentUser.uid), {
-        name,
-        bio,
+        name: name.trim(),
+        bio: bio.trim(),
       });
-      // Navigate with success parameter
-      navigate("/profile?success=true");
+
+      showToastMessage("Profile updated successfully! ✅", "success");
+      
+      setTimeout(() => {
+        navigate("/profile");
+      }, 1500);
     } catch (error) {
       console.log(error);
-      alert("Failed to update profile");
+      showToastMessage("Failed to update profile: " + error.message, "error");
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
+  };
+
+  const showToastMessage = (message, type = "success") => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+    }, 3000);
   };
 
   if (!currentUser) {
     return (
-      <div className={`min-h-screen flex justify-center items-center pt-20 ${
-        darkMode ? "bg-slate-900" : "bg-gradient-to-br from-slate-50 via-white to-indigo-50/30"
-      }`}>
-        <div className={`p-10 rounded-3xl text-center ${
-          darkMode
-            ? "bg-slate-800/80 border border-white/5"
-            : "bg-white/80 backdrop-blur-xl shadow-xl"
-        }`}>
-          <div className="text-6xl mb-4">🔒</div>
-          <h1 className={`text-3xl font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>
-            Login Required
-          </h1>
-          <p className={`mt-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
-            Please login to edit your profile.
-          </p>
+      <div
+        className={`min-h-screen flex justify-center items-center pt-20 ${
+          darkMode ? "bg-slate-900 text-white" : "bg-gray-100 text-black"
+        }`}
+      >
+        <div
+          className={`p-10 rounded-3xl shadow-xl text-center ${
+            darkMode ? "bg-slate-800" : "bg-white"
+          }`}
+        >
+          <h1 className="text-3xl font-bold mb-4">🔒 Login Required</h1>
+          <p className="text-gray-500">Please login to edit your profile.</p>
         </div>
       </div>
     );
   }
 
-  if (loading) {
-    return (
-      <div className={`min-h-screen flex justify-center items-center pt-20 ${
-        darkMode ? "bg-slate-900" : "bg-gradient-to-br from-slate-50 via-white to-indigo-50/30"
-      }`}>
-        <div className="w-12 h-12 border-4 border-[#6C63FF]/30 border-t-[#6C63FF] rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className={`min-h-screen pt-20 ${
-      darkMode ? "bg-slate-900" : "bg-gradient-to-br from-slate-50 via-white to-indigo-50/30"
-    }`}>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-        <div className={`p-8 sm:p-10 rounded-3xl transition-all duration-300 ${
-          darkMode
-            ? "bg-slate-800/80 border border-white/5"
-            : "bg-white/80 backdrop-blur-xl shadow-xl border border-white/20"
-        }`}>
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#6C63FF] to-[#3F3D9E] flex items-center justify-center text-white text-2xl shadow-lg shadow-[#6C63FF]/25">
-              ✏️
-            </div>
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-[#6C63FF]">
-                Edit Profile
-              </h1>
-              <p className={`text-sm mt-1 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
-                Update your personal information
-              </p>
-            </div>
+    <div
+      className={`min-h-screen pt-24 pb-8 px-4 sm:px-8 ${
+        darkMode
+          ? "bg-slate-900 text-white"
+          : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"
+      }`}
+    >
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4 animate-slide-up">
+          <div
+            className={`p-4 rounded-2xl shadow-2xl flex items-center gap-3 ${
+              toastType === "success"
+                ? darkMode
+                  ? "bg-slate-800 border border-emerald-500/30 text-white"
+                  : "bg-white border border-emerald-500/30 text-slate-800"
+                : darkMode
+                ? "bg-slate-800 border border-red-500/30 text-white"
+                : "bg-white border border-red-500/30 text-slate-800"
+            }`}
+          >
+            <span className="text-2xl">
+              {toastType === "success" ? "✅" : "❌"}
+            </span>
+            <span className="font-medium flex-1">{toastMessage}</span>
+            <button
+              onClick={() => setShowToast(false)}
+              className="text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div
+        className={`max-w-3xl mx-auto p-6 sm:p-10 rounded-3xl shadow-xl ${
+          darkMode ? "bg-slate-800" : "bg-white/90 backdrop-blur-sm"
+        }`}
+      >
+        {/* Header with Avatar */}
+        <div className="flex flex-col items-center mb-8">
+          <div
+            className={`
+              w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 
+              flex items-center justify-center text-white text-3xl font-bold 
+              shadow-xl ring-4 ring-white dark:ring-slate-800 mb-4
+            `}
+          >
+            {name?.charAt(0)?.toUpperCase() ||
+              currentUser?.displayName?.charAt(0)?.toUpperCase() ||
+              "U"}
+          </div>
+          <h1
+            className={`text-2xl sm:text-3xl font-bold ${
+              darkMode ? "text-white" : "text-slate-800"
+            }`}
+          >
+            ✏️ Edit Profile
+          </h1>
+          <p className={`text-sm ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+            Update your personal information
+          </p>
+        </div>
+
+        {/* Divider */}
+        <div
+          className={`w-full h-px my-6 ${darkMode ? "bg-slate-700" : "bg-gray-200"}`}
+        ></div>
+
+        <form onSubmit={handleSave} className="space-y-6">
+          {/* Name */}
+          <div>
+            <label
+              className={`font-semibold block mb-2 ${
+                darkMode ? "text-slate-300" : "text-slate-700"
+              }`}
+            >
+              Full Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={`
+                w-full mt-1 p-4 rounded-2xl border-2 outline-none 
+                transition-all duration-300
+                ${
+                  darkMode
+                    ? "bg-slate-700/50 border-slate-600 focus:border-indigo-500 text-white placeholder:text-slate-500"
+                    : "bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800"
+                }
+              `}
+              placeholder="Enter your full name"
+            />
           </div>
 
-          <form onSubmit={handleSave} className="space-y-6">
-            <div>
-              <label className={`text-sm font-medium block mb-2 ${
+          {/* Bio */}
+          <div>
+            <label
+              className={`font-semibold block mb-2 ${
                 darkMode ? "text-slate-300" : "text-slate-700"
-              }`}>
-                Full Name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className={`w-full p-4 rounded-xl border-2 outline-none transition-all duration-300 ${
+              }`}
+            >
+              Bio
+            </label>
+            <textarea
+              rows="6"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className={`
+                w-full mt-1 p-4 rounded-2xl border-2 outline-none 
+                transition-all duration-300 resize-none
+                ${
                   darkMode
-                    ? "bg-slate-700/50 border-slate-600 focus:border-[#6C63FF] text-white"
-                    : "border-slate-200 focus:border-[#6C63FF]"
-                }`}
-              />
-            </div>
+                    ? "bg-slate-700/50 border-slate-600 focus:border-indigo-500 text-white placeholder:text-slate-500"
+                    : "bg-gray-50 border-gray-200 focus:border-indigo-500 text-slate-800"
+                }
+              `}
+              placeholder="Tell us something about yourself..."
+            />
+          </div>
 
-            <div>
-              <label className={`text-sm font-medium block mb-2 ${
-                darkMode ? "text-slate-300" : "text-slate-700"
-              }`}>
-                Bio
-              </label>
-              <textarea
-                rows="6"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                className={`w-full p-4 rounded-xl border-2 outline-none transition-all duration-300 ${
-                  darkMode
-                    ? "bg-slate-700/50 border-slate-600 focus:border-[#6C63FF] text-white placeholder:text-slate-500"
-                    : "border-slate-200 focus:border-[#6C63FF]"
-                }`}
-                placeholder="Tell us something about yourself..."
-              />
-            </div>
+          {/* Divider */}
+          <div
+            className={`w-full h-px my-6 ${darkMode ? "bg-slate-700" : "bg-gray-200"}`}
+          ></div>
 
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="submit"
-              disabled={saving}
-              className="w-full py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-[#6C63FF] to-[#3F3D9E] hover:shadow-lg hover:shadow-[#6C63FF]/25 transition-all duration-300 flex items-center justify-center gap-2"
+              disabled={loading}
+              className={`
+                flex-1 py-4 rounded-2xl font-semibold 
+                transition-all duration-300 flex items-center justify-center gap-2
+                ${
+                  darkMode
+                    ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/25"
+                    : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg hover:shadow-indigo-500/30 text-white"
+                } hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed
+              `}
             >
-              {saving ? (
+              {loading ? (
                 <>
                   <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                   Saving...
@@ -178,8 +262,24 @@ function EditProfile() {
                 </>
               )}
             </button>
-          </form>
-        </div>
+
+            <button
+              type="button"
+              onClick={() => navigate("/profile")}
+              className={`
+                px-8 py-4 rounded-2xl font-semibold 
+                transition-all duration-300
+                ${
+                  darkMode
+                    ? "bg-slate-700 hover:bg-slate-600 text-slate-300"
+                    : "bg-gray-100 hover:bg-gray-200 text-slate-700"
+                }
+              `}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
