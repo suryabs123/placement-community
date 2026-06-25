@@ -33,12 +33,12 @@ function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   const navLinks = [
-    { to: "/", label: "Home"},
-    { to: "/ask", label: "Ask Question"},
-    { to: "/publicchat", label: "Public Chat" },
+    { to: "/", label: "Home" },
+    { to: "/ask", label: "Ask Question" },
+    { to: "/publicchat", label: "Chat" },
     { to: "/chat", label: "Private" },
     { to: "/notifications", label: "Alerts" },
-    { to: "/profile", label: "Profile"},
+    { to: "/profile", label: "Profile" },
   ];
 
   return (
@@ -49,7 +49,7 @@ function Navbar() {
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          {/* Logo Section */}
+          {/* Logo Section - Removed Green Dot */}
           <Link to="/" className="flex items-center gap-3 group">
             <div className="relative">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 logo-hover">
@@ -59,11 +59,11 @@ function Navbar() {
                   className="w-full h-full object-contain animate-logo"
                 />
               </div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white dark:border-slate-900 animate-pulse"></div>
+              {/* Green dot removed */}
             </div>
             <div>
               <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-                CIT Community
+                CIT Placement Community
               </span>
               <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 -mt-0.5 tracking-wider uppercase">
                 Placement Hub
@@ -71,7 +71,7 @@ function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop Navigation - Centered */}
+          {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-2xl p-1.5 border border-slate-200/50 dark:border-slate-700/50">
             {navLinks.map((link) => (
               <Link
@@ -118,7 +118,7 @@ function Navbar() {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="p-2.5 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-300"
+                  className="p-2.5 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-all duration-300"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -161,7 +161,7 @@ function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu - Glassmorphism */}
+      {/* Mobile Menu */}
       <div
         className={`lg:hidden overflow-hidden transition-all duration-500 ${
           mobileMenuOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
@@ -212,7 +212,7 @@ function Navbar() {
                     handleLogout();
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-red-500 border-2 border-red-500/20 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-300"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-rose-500 border-2 border-rose-500/20 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-all duration-300"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
