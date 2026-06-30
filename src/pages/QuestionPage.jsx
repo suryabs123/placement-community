@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   doc,
   getDoc,
@@ -20,6 +20,7 @@ import AnswerCard from "../components/AnswerCard";
 
 function QuestionPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { currentUser } = useContext(AuthContext);
   const { darkMode } = useContext(ThemeContext);
   const [question, setQuestion] = useState(null);
@@ -30,7 +31,6 @@ function QuestionPage() {
   useEffect(() => {
     fetchQuestion();
     
-    // Real-time answers listener - No reload needed
     const q = query(
       collection(db, "answers"),
       where("questionId", "==", id),
@@ -44,12 +44,9 @@ function QuestionPage() {
       }));
       setAnswers(data);
       
-      // Update the question's answersCount in real-time
-      if (question) {
-        updateDoc(doc(db, "questions", id), {
-          answersCount: data.length,
-        }).catch(() => {});
-      }
+      updateDoc(doc(db, "questions", id), {
+        answersCount: data.length,
+      }).catch(() => {});
     });
     
     return () => unsubscribe();
@@ -89,9 +86,7 @@ function QuestionPage() {
         createdAt: Timestamp.now(),
         upvotes: 0,
       });
-      
       setAnswer("");
-      // No need to reload - onSnapshot will update automatically
     } catch (error) {
       console.log(error);
       alert("Failed to post answer");
@@ -111,7 +106,7 @@ function QuestionPage() {
       try {
         await deleteDoc(doc(db, "questions", id));
         alert("Question deleted successfully!");
-        window.location.href = "/";
+        navigate("/");
       } catch (error) {
         console.log(error);
         alert("Failed to delete question");
@@ -148,7 +143,6 @@ function QuestionPage() {
                   <span className="badge badge-success">New</span>
                 )}
               </div>
-              {/* Delete Question Button - Only for author */}
               {currentUser && question.authorId === currentUser.uid && (
                 <button
                   onClick={handleDeleteQuestion}

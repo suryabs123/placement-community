@@ -5,6 +5,8 @@ import {
   orderBy,
   onSnapshot,
   getDocs,
+  addDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import { db } from "../firebase/config";
@@ -24,6 +26,9 @@ function Home() {
   const [trendingQuestions, setTrendingQuestions] = useState([]);
   const [topContributors, setTopContributors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportQuestionId, setReportQuestionId] = useState(null);
+  const [reportReason, setReportReason] = useState("");
 
   const popularTopics = [
     { name: "DSA", icon: "📊", color: "from-indigo-500 to-indigo-600" },
@@ -35,18 +40,6 @@ function Home() {
     { name: "Resume", icon: "📄", color: "from-cyan-500 to-blue-600" },
     { name: "Projects", icon: "🚀", color: "from-violet-500 to-purple-600" },
   ];
-
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reportQuestionId, setReportQuestionId] = useState(null);
-  const [reportReason, setReportReason] = useState("");
-
-  // Bad words filter
-  const badWords = ["badword1", "badword2", "offensive"]; // Add your bad words here
-
-  const containsBadWords = (text) => {
-    const lowerText = text.toLowerCase();
-    return badWords.some(word => lowerText.includes(word.toLowerCase()));
-  };
 
   // Real-time questions listener
   useEffect(() => {
@@ -211,6 +204,34 @@ function Home() {
     };
   }, []);
 
+  const handleReport = async () => {
+    if (!currentUser) {
+      alert("Please login to report");
+      return;
+    }
+    if (!reportReason.trim()) {
+      alert("Please provide a reason");
+      return;
+    }
+    try {
+      await addDoc(collection(db, "reports"), {
+        questionId: reportQuestionId,
+        reporterId: currentUser.uid,
+        reporterName: currentUser.displayName || currentUser.email,
+        reason: reportReason,
+        createdAt: Timestamp.now(),
+        status: "pending",
+      });
+      alert("Report submitted successfully!");
+      setShowReportModal(false);
+      setReportReason("");
+      setReportQuestionId(null);
+    } catch (error) {
+      console.log(error);
+      alert("Failed to submit report");
+    }
+  };
+
   const getUniqueMonths = () => {
     const months = new Set();
     questions.forEach(q => {
@@ -306,34 +327,6 @@ function Home() {
     return filtered;
   };
 
-  const handleReport = async () => {
-    if (!currentUser) {
-      alert("Please login to report");
-      return;
-    }
-    if (!reportReason.trim()) {
-      alert("Please provide a reason");
-      return;
-    }
-    try {
-      await addDoc(collection(db, "reports"), {
-        questionId: reportQuestionId,
-        reporterId: currentUser.uid,
-        reporterName: currentUser.displayName || currentUser.email,
-        reason: reportReason,
-        createdAt: Timestamp.now(),
-        status: "pending",
-      });
-      alert("Report submitted successfully!");
-      setShowReportModal(false);
-      setReportReason("");
-      setReportQuestionId(null);
-    } catch (error) {
-      console.log(error);
-      alert("Failed to submit report");
-    }
-  };
-
   const filteredQuestions = getSortedQuestions();
   const uniqueMonths = getUniqueMonths();
   const uniqueYears = getUniqueYears();
@@ -362,7 +355,6 @@ function Home() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="flex-1 text-center lg:text-left">
-              {/* Removed stats badge */}
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight">
                 Welcome to
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-pink-200">
@@ -401,7 +393,7 @@ function Home() {
               </div>
             </div>
 
-            {/* Stats Cards - Reduced Size */}
+            {/* Stats Cards - Reduced */}
             <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
               <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
                 <div className="text-2xl font-bold text-white">{stats.total}</div>

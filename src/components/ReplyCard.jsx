@@ -5,6 +5,12 @@ function ReplyCard({ reply, onDelete, currentUser }) {
   const { darkMode } = useContext(ThemeContext);
   const isAuthor = currentUser && reply.authorId === currentUser.uid;
 
+  const handleDeleteClick = () => {
+    if (window.confirm("Are you sure you want to delete this reply?")) {
+      onDelete(reply.id);
+    }
+  };
+
   return (
     <div
       className={`p-5 rounded-2xl transition-all duration-300 ${
@@ -37,10 +43,9 @@ function ReplyCard({ reply, onDelete, currentUser }) {
           </p>
         </div>
         
-        {/* Delete Reply Button - Only for author */}
         {isAuthor && (
           <button
-            onClick={() => onDelete(reply.id)}
+            onClick={handleDeleteClick}
             className="text-red-500 hover:text-red-700 transition-colors p-1"
             title="Delete reply"
           >

@@ -22,7 +22,7 @@ function AnswerCard({ answer }) {
   const [replies, setReplies] = useState([]);
   const [showReplyForm, setShowReplyForm] = useState(false);
 
-  // Real-time replies listener - No reload needed
+  // Real-time replies listener - INSTANT UPDATE
   useEffect(() => {
     const q = query(
       collection(db, "replies"),
@@ -56,7 +56,7 @@ function AnswerCard({ answer }) {
       });
       setReplyText("");
       setShowReplyForm(false);
-      // No need to reload - onSnapshot will update automatically
+      // UI updates instantly via onSnapshot
     } catch (error) {
       console.log(error);
       alert("Failed to add reply");
@@ -71,7 +71,7 @@ function AnswerCard({ answer }) {
     if (window.confirm("Are you sure you want to delete this reply?")) {
       try {
         await deleteDoc(doc(db, "replies", replyId));
-        // No need to reload - onSnapshot will update automatically
+        // UI updates instantly via onSnapshot
       } catch (error) {
         console.log(error);
         alert("Failed to delete reply");
@@ -119,7 +119,7 @@ function AnswerCard({ answer }) {
 
       <hr className={`mb-5 ${darkMode ? "border-slate-700" : "border-slate-200"}`} />
 
-      {/* Reply Toggle - Inside the card */}
+      {/* Reply Toggle */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => setShowReplyForm(!showReplyForm)}
@@ -162,7 +162,7 @@ function AnswerCard({ answer }) {
         </form>
       )}
 
-      {/* Replies - Real-time update */}
+      {/* Replies - Real-time */}
       {replies.length > 0 && (
         <>
           <h4 className={`font-bold mb-4 flex items-center gap-2 ${
