@@ -22,6 +22,7 @@ function AnswerCard({ answer }) {
   const [replies, setReplies] = useState([]);
   const [showReplyForm, setShowReplyForm] = useState(false);
 
+  // Real-time replies listener - No reload needed
   useEffect(() => {
     const q = query(
       collection(db, "replies"),
@@ -55,8 +56,10 @@ function AnswerCard({ answer }) {
       });
       setReplyText("");
       setShowReplyForm(false);
+      // No need to reload - onSnapshot will update automatically
     } catch (error) {
       console.log(error);
+      alert("Failed to add reply");
     }
   };
 
@@ -68,6 +71,7 @@ function AnswerCard({ answer }) {
     if (window.confirm("Are you sure you want to delete this reply?")) {
       try {
         await deleteDoc(doc(db, "replies", replyId));
+        // No need to reload - onSnapshot will update automatically
       } catch (error) {
         console.log(error);
         alert("Failed to delete reply");
@@ -83,7 +87,7 @@ function AnswerCard({ answer }) {
           : "bg-white shadow-sm hover:shadow-xl border border-slate-100"
       }`}
     >
-      {/* Header - Removed Upvote */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
@@ -104,7 +108,6 @@ function AnswerCard({ answer }) {
             </p>
           </div>
         </div>
-        {/* Upvote removed */}
       </div>
 
       {/* Answer */}
@@ -116,15 +119,22 @@ function AnswerCard({ answer }) {
 
       <hr className={`mb-5 ${darkMode ? "border-slate-700" : "border-slate-200"}`} />
 
-      {/* Reply Toggle */}
-      <button
-        onClick={() => setShowReplyForm(!showReplyForm)}
-        className={`text-sm font-medium transition-all duration-300 ${
-          darkMode ? "text-indigo-400 hover:text-indigo-300" : "text-indigo-600 hover:text-indigo-700"
-        }`}
-      >
-        {showReplyForm ? "− Hide Reply" : `+ Add Reply (${replies.length})`}
-      </button>
+      {/* Reply Toggle - Inside the card */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setShowReplyForm(!showReplyForm)}
+          className={`text-sm font-medium transition-all duration-300 ${
+            darkMode ? "text-indigo-400 hover:text-indigo-300" : "text-indigo-600 hover:text-indigo-700"
+          }`}
+        >
+          {showReplyForm ? "− Hide Reply" : `+ Add Reply (${replies.length})`}
+        </button>
+        {replies.length > 0 && (
+          <span className={`text-xs ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
+            • {replies.length} {replies.length === 1 ? "reply" : "replies"}
+          </span>
+        )}
+      </div>
 
       {/* Reply Form */}
       {showReplyForm && (
@@ -152,7 +162,7 @@ function AnswerCard({ answer }) {
         </form>
       )}
 
-      {/* Replies */}
+      {/* Replies - Real-time update */}
       {replies.length > 0 && (
         <>
           <h4 className={`font-bold mb-4 flex items-center gap-2 ${

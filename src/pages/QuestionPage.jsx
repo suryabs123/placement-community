@@ -30,6 +30,7 @@ function QuestionPage() {
   useEffect(() => {
     fetchQuestion();
     
+    // Real-time answers listener - No reload needed
     const q = query(
       collection(db, "answers"),
       where("questionId", "==", id),
@@ -90,8 +91,10 @@ function QuestionPage() {
       });
       
       setAnswer("");
+      // No need to reload - onSnapshot will update automatically
     } catch (error) {
       console.log(error);
+      alert("Failed to post answer");
     }
   };
 
@@ -189,7 +192,7 @@ function QuestionPage() {
           </div>
         )}
 
-        {/* Answers Section - Removed "(0)" display */}
+        {/* Answers Section */}
         <div className="flex items-center justify-between mb-8">
           <h2 className={`text-2xl sm:text-3xl font-bold ${
             darkMode ? "text-white" : "text-slate-800"

@@ -36,6 +36,18 @@ function Home() {
     { name: "Projects", icon: "🚀", color: "from-violet-500 to-purple-600" },
   ];
 
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportQuestionId, setReportQuestionId] = useState(null);
+  const [reportReason, setReportReason] = useState("");
+
+  // Bad words filter
+  const badWords = ["badword1", "badword2", "offensive"]; // Add your bad words here
+
+  const containsBadWords = (text) => {
+    const lowerText = text.toLowerCase();
+    return badWords.some(word => lowerText.includes(word.toLowerCase()));
+  };
+
   // Real-time questions listener
   useEffect(() => {
     const q = query(
@@ -99,7 +111,7 @@ function Home() {
     return () => unsubscribe();
   }, []);
 
-  // Real-time top contributors - Only users with > 50 contributions
+  // Real-time top contributors
   useEffect(() => {
     const fetchTopContributors = async () => {
       try {
@@ -170,7 +182,6 @@ function Home() {
           total: (user.questions || 0) + (user.answers || 0) + (user.replies || 0),
         }));
 
-        // Only show users with more than 50 contributions
         const filtered = contributors.filter(user => user.total > 50);
         
         const sorted = filtered
@@ -295,6 +306,34 @@ function Home() {
     return filtered;
   };
 
+  const handleReport = async () => {
+    if (!currentUser) {
+      alert("Please login to report");
+      return;
+    }
+    if (!reportReason.trim()) {
+      alert("Please provide a reason");
+      return;
+    }
+    try {
+      await addDoc(collection(db, "reports"), {
+        questionId: reportQuestionId,
+        reporterId: currentUser.uid,
+        reporterName: currentUser.displayName || currentUser.email,
+        reason: reportReason,
+        createdAt: Timestamp.now(),
+        status: "pending",
+      });
+      alert("Report submitted successfully!");
+      setShowReportModal(false);
+      setReportReason("");
+      setReportQuestionId(null);
+    } catch (error) {
+      console.log(error);
+      alert("Failed to submit report");
+    }
+  };
+
   const filteredQuestions = getSortedQuestions();
   const uniqueMonths = getUniqueMonths();
   const uniqueYears = getUniqueYears();
@@ -314,92 +353,128 @@ function Home() {
 
   return (
     <div className={`min-h-screen ${darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"}`}>
-      {/* Hero Section - Dark Rich Gradient */}
+      {/* Hero Section - Reduced */}
       <div className={`relative overflow-hidden ${darkMode ? "bg-slate-800" : "bg-gradient-to-br from-indigo-700 via-purple-700 to-pink-700"}`}>
         <div className="absolute inset-0 bg-white/5"></div>
         <div className="absolute top-0 right-0 w-1/2 h-full bg-white/10 backdrop-blur-3xl rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-white/10 backdrop-blur-3xl rounded-full blur-3xl"></div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="flex-1 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium mb-6 animate-pulse">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                {stats.total}+ Questions • {stats.users}+ Members
-              </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+              {/* Removed stats badge */}
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight">
                 Welcome to
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-pink-200">
                   CIT Placement Community
                 </span>
               </h1>
-              <p className="text-lg text-white/90 max-w-2xl mx-auto lg:mx-0 mb-8">
-                Join thousands of students preparing for placements. Ask questions, 
-                share knowledge, and get answers from experts and peers.
+              <p className="text-base text-white/90 max-w-2xl mx-auto lg:mx-0 mb-5">
+                Ask questions, share knowledge, and get answers from experts and peers.
               </p>
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
                 {!currentUser ? (
                   <>
-                    <Link to="/register" className="px-8 py-4 rounded-xl bg-white text-indigo-600 font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300">
+                    <Link to="/register" className="px-6 py-2.5 rounded-xl bg-white text-indigo-600 font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 text-sm">
                       🚀 Get Started
                     </Link>
-                    <Link to="/login" className="px-8 py-4 rounded-xl border-2 border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-300">
+                    <Link to="/login" className="px-6 py-2.5 rounded-xl border-2 border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-300 text-sm">
                       Sign In
                     </Link>
                   </>
                 ) : (
-                  <Link to="/ask" className="px-8 py-4 rounded-xl bg-white text-indigo-600 font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300">
+                  <Link to="/ask" className="px-6 py-2.5 rounded-xl bg-white text-indigo-600 font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 text-sm">
                     ❓ Ask a Question
                   </Link>
                 )}
               </div>
               
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 mt-8">
-                <div className="flex items-center gap-2 text-white/80">
-                  <span className="text-2xl">👥</span>
-                  <span className="text-sm">Active Community</span>
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mt-4">
+                <div className="flex items-center gap-1.5 text-white/80 text-sm">
+                  <span className="text-lg">👥</span>
+                  <span>Active Community</span>
                 </div>
-                <div className="flex items-center gap-2 text-white/80">
-                  <span className="text-2xl">🎯</span>
-                  <span className="text-sm">Placement Focused</span>
+                <div className="flex items-center gap-1.5 text-white/80 text-sm">
+                  <span className="text-lg">🎯</span>
+                  <span>Placement Focused</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 grid grid-cols-2 gap-4 w-full max-w-md">
-              <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-6 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
-                <div className="text-3xl font-bold text-white">{stats.total}</div>
-                <div className="text-sm text-white/80 mt-1">Questions</div>
+            {/* Stats Cards - Reduced Size */}
+            <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+              <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
+                <div className="text-2xl font-bold text-white">{stats.total}</div>
+                <div className="text-xs text-white/80 mt-0.5">Questions</div>
               </div>
-              <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-6 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
-                <div className="text-3xl font-bold text-white">{stats.today}</div>
-                <div className="text-sm text-white/80 mt-1">Asked Today</div>
+              <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
+                <div className="text-2xl font-bold text-white">{stats.today}</div>
+                <div className="text-xs text-white/80 mt-0.5">Asked Today</div>
               </div>
-              <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-6 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
-                <div className="text-3xl font-bold text-white">{stats.users}</div>
-                <div className="text-sm text-white/80 mt-1">Members</div>
+              <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
+                <div className="text-2xl font-bold text-white">{stats.users}</div>
+                <div className="text-xs text-white/80 mt-0.5">Members</div>
               </div>
-              <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-6 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
-                <div className="text-3xl font-bold text-white">{stats.answers}</div>
-                <div className="text-sm text-white/80 mt-1">Answers</div>
+              <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
+                <div className="text-2xl font-bold text-white">{stats.answers}</div>
+                <div className="text-xs text-white/80 mt-0.5">Answers</div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className={`p-6 rounded-3xl max-w-md w-full mx-4 ${darkMode ? "bg-slate-800" : "bg-white"}`}>
+            <h3 className={`text-xl font-bold mb-4 ${darkMode ? "text-white" : "text-slate-800"}`}>Report Question</h3>
+            <textarea
+              placeholder="Why are you reporting this question?"
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className={`w-full p-3 rounded-xl border-2 outline-none transition-all duration-300 min-h-[100px] ${
+                darkMode
+                  ? "bg-slate-700/50 border-slate-600 focus:border-indigo-500 text-white placeholder:text-slate-500"
+                  : "border-slate-200 focus:border-indigo-500"
+              }`}
+            />
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={handleReport}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold transition-all duration-300"
+              >
+                Submit Report
+              </button>
+              <button
+                onClick={() => {
+                  setShowReportModal(false);
+                  setReportReason("");
+                  setReportQuestionId(null);
+                }}
+                className={`flex-1 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
+                  darkMode ? "bg-slate-700 hover:bg-slate-600 text-slate-300" : "bg-gray-100 hover:bg-gray-200 text-slate-700"
+                }`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left Sidebar */}
           <div className="lg:col-span-1 order-2 lg:order-1">
             <div className="space-y-6 sticky top-24">
               {/* Popular Topics */}
-              <div className={`p-6 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
-                <h3 className={`font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+              <div className={`p-5 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
+                <h3 className={`font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                   📚 Popular Topics
                 </h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {popularTopics.map((topic) => (
                     <button
                       key={topic.name}
@@ -407,7 +482,7 @@ function Home() {
                         setSelectedTopic(selectedTopic === topic.name ? "" : topic.name);
                         setSearch("");
                       }}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-300 ${
                         selectedTopic === topic.name
                           ? `bg-gradient-to-r ${topic.color} text-white shadow-lg scale-105`
                           : darkMode
@@ -423,7 +498,7 @@ function Home() {
                 {selectedTopic && (
                   <button
                     onClick={() => setSelectedTopic("")}
-                    className="mt-3 text-xs text-rose-500 hover:text-rose-600 transition-colors w-full text-center"
+                    className="mt-2 text-xs text-rose-500 hover:text-rose-600 transition-colors w-full text-center"
                   >
                     ✕ Clear Topic Filter
                   </button>
@@ -431,27 +506,27 @@ function Home() {
               </div>
 
               {/* Trending Questions */}
-              <div className={`p-6 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
-                <h3 className={`font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+              <div className={`p-5 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
+                <h3 className={`font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                   🔥 Trending
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {trendingQuestions.length > 0 ? (
                     trendingQuestions.map((q, index) => (
                       <Link 
                         key={q.id} 
                         to={`/question/${q.id}`}
-                        className={`block p-3 rounded-xl transition-all duration-300 ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"}`}
+                        className={`block p-2.5 rounded-xl transition-all duration-300 ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"}`}
                       >
-                        <div className="flex items-start gap-3">
-                          <span className={`text-sm font-bold ${index === 0 ? "text-amber-500" : index === 1 ? "text-slate-400" : index === 2 ? "text-orange-400" : "text-slate-400"}`}>
+                        <div className="flex items-start gap-2">
+                          <span className={`text-xs font-bold ${index === 0 ? "text-amber-500" : index === 1 ? "text-slate-400" : index === 2 ? "text-orange-400" : "text-slate-400"}`}>
                             #{index + 1}
                           </span>
                           <div>
-                            <p className={`text-sm font-medium line-clamp-2 ${darkMode ? "text-slate-300" : "text-slate-700"}`}>
+                            <p className={`text-xs font-medium line-clamp-2 ${darkMode ? "text-slate-300" : "text-slate-700"}`}>
                               {q.title}
                             </p>
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-2 mt-0.5">
                               <span className="text-xs text-indigo-500">👍 {q.upvotes || 0}</span>
                               <span className="text-xs text-slate-400">•</span>
                               <span className="text-xs text-slate-400">{q.author}</span>
@@ -468,21 +543,21 @@ function Home() {
                 </div>
               </div>
 
-              {/* Top Contributors - Only > 50 contributions */}
-              <div className={`p-6 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
-                <h3 className={`font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+              {/* Top Contributors */}
+              <div className={`p-5 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
+                <h3 className={`font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                   🏆 Top Contributors
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {topContributors.length > 0 ? (
                     topContributors.map((user, index) => (
                       <Link 
                         key={user.id || index} 
                         to={`/profile/${user.id}`}
-                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-all duration-300 cursor-pointer"
+                        className="flex items-center gap-2 p-2 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-all duration-300 cursor-pointer"
                       >
                         <div className="relative">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${index === 0 ? "bg-amber-500" : index === 1 ? "bg-slate-400" : index === 2 ? "bg-orange-400" : "bg-indigo-500"}`}>
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold ${index === 0 ? "bg-amber-500" : index === 1 ? "bg-slate-400" : index === 2 ? "bg-orange-400" : "bg-indigo-500"}`}>
                             {user.name?.charAt(0)?.toUpperCase() || "U"}
                           </div>
                           {index < 3 && (
@@ -505,7 +580,7 @@ function Home() {
                     ))
                   ) : (
                     <div className={`text-sm ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      No contributors with 50+ contributions yet
+                      No contributors yet
                     </div>
                   )}
                 </div>
@@ -516,7 +591,7 @@ function Home() {
           {/* Main Feed */}
           <div className="lg:col-span-2 order-1 lg:order-2">
             {/* Search & Filters Bar */}
-            <div className={`p-6 rounded-2xl mb-6 ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
+            <div className={`p-4 rounded-2xl mb-5 ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <span className="text-slate-400">🔍</span>
@@ -529,7 +604,7 @@ function Home() {
                     setSearch(e.target.value);
                     if (e.target.value) setSelectedTopic("");
                   }}
-                  className={`w-full pl-12 pr-4 py-3.5 rounded-xl border-2 outline-none transition-all duration-300 ${
+                  className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 outline-none transition-all duration-300 text-sm ${
                     darkMode
                       ? "bg-slate-700/50 border-slate-600 focus:border-indigo-500 text-white placeholder:text-slate-500"
                       : "bg-slate-50 border-slate-200 focus:border-indigo-500"
@@ -537,11 +612,11 @@ function Home() {
                 />
               </div>
               
-              <div className="flex flex-wrap items-center gap-3 mt-4">
+              <div className="flex flex-wrap items-center gap-2 mt-3">
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className={`px-4 py-2 rounded-xl border-2 outline-none transition-all duration-300 text-sm font-medium ${
+                  className={`px-3 py-1.5 rounded-xl border-2 outline-none transition-all duration-300 text-sm font-medium ${
                     darkMode
                       ? "bg-slate-700/50 border-slate-600 text-white focus:border-indigo-500"
                       : "bg-slate-50 border-slate-200 text-slate-700 focus:border-indigo-500"
@@ -561,7 +636,7 @@ function Home() {
                       setSelectedYear(e.target.value);
                       setSelectedMonth("");
                     }}
-                    className={`px-4 py-2 rounded-xl border-2 outline-none transition-all duration-300 text-sm font-medium ${
+                    className={`px-3 py-1.5 rounded-xl border-2 outline-none transition-all duration-300 text-sm font-medium ${
                       darkMode
                         ? "bg-slate-700/50 border-slate-600 text-white focus:border-indigo-500"
                         : "bg-slate-50 border-slate-200 text-slate-700 focus:border-indigo-500"
@@ -578,7 +653,7 @@ function Home() {
                   <select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(e.target.value)}
-                    className={`px-4 py-2 rounded-xl border-2 outline-none transition-all duration-300 text-sm font-medium ${
+                    className={`px-3 py-1.5 rounded-xl border-2 outline-none transition-all duration-300 text-sm font-medium ${
                       darkMode
                         ? "bg-slate-700/50 border-slate-600 text-white focus:border-indigo-500"
                         : "bg-slate-50 border-slate-200 text-slate-700 focus:border-indigo-500"
@@ -601,9 +676,9 @@ function Home() {
                       setSelectedMonth("");
                       setSortBy("newest");
                     }}
-                    className="px-4 py-2 rounded-xl text-sm font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-all duration-300"
+                    className="px-3 py-1.5 rounded-xl text-sm font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-all duration-300"
                   >
-                    ✕ Clear All
+                    ✕ Clear
                   </button>
                 )}
 
@@ -613,26 +688,26 @@ function Home() {
               </div>
 
               {selectedTopic && (
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="text-sm text-slate-500">Filtering by:</span>
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-xs text-slate-500">Filtering by:</span>
+                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                     📚 {selectedTopic}
                   </span>
                 </div>
               )}
             </div>
 
-            {/* Questions Feed - Removed 💬 0 answers */}
+            {/* Questions Feed */}
             {filteredQuestions.length === 0 ? (
-              <div className={`p-16 rounded-3xl text-center ${darkMode ? "bg-slate-800/50 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
-                <div className="text-6xl mb-4 animate-bounce">🔍</div>
-                <h3 className={`text-2xl font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>
+              <div className={`p-12 rounded-3xl text-center ${darkMode ? "bg-slate-800/50 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
+                <div className="text-5xl mb-3 animate-bounce">🔍</div>
+                <h3 className={`text-xl font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>
                   No questions found
                 </h3>
-                <p className={`mt-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+                <p className={`text-sm mt-1 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                   {selectedTopic ? `No questions about "${selectedTopic}" yet. Be the first to ask!` : "Try adjusting your filters or be the first to ask!"}
                 </p>
-                <Link to="/ask" className="inline-block mt-6 px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-105">
+                <Link to="/ask" className="inline-block mt-4 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-105">
                   ❓ Ask a Question
                 </Link>
               </div>
@@ -641,7 +716,7 @@ function Home() {
                 {filteredQuestions.map((question) => (
                   <div
                     key={question.id}
-                    className={`p-6 rounded-2xl transition-all duration-300 hover:scale-[1.01] hover:shadow-xl ${
+                    className={`p-5 rounded-2xl transition-all duration-300 hover:scale-[1.01] hover:shadow-xl ${
                       darkMode
                         ? "bg-slate-800/80 border border-slate-700/50 hover:bg-slate-800"
                         : "bg-white/90 backdrop-blur-sm shadow-md hover:shadow-xl border border-white/50 hover:border-indigo-200"
@@ -675,17 +750,17 @@ function Home() {
                         </div>
 
                         <Link to={`/question/${question.id}`}>
-                          <h2 className={`text-xl font-bold mb-2 hover:text-indigo-500 transition-colors ${darkMode ? "text-white" : "text-slate-800"}`}>
+                          <h2 className={`text-lg font-bold mb-1.5 hover:text-indigo-500 transition-colors ${darkMode ? "text-white" : "text-slate-800"}`}>
                             {question.title}
                           </h2>
                         </Link>
 
-                        <p className={`line-clamp-2 mb-3 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        <p className={`line-clamp-2 mb-2 text-sm ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                           {question.description}
                         </p>
 
-                        <div className="flex flex-wrap items-center gap-4 text-sm">
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-3 text-sm">
+                          <div className="flex items-center gap-1.5">
                             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-bold">
                               {question.author?.charAt(0)?.toUpperCase() || "A"}
                             </div>
@@ -694,8 +769,24 @@ function Home() {
                             </span>
                           </div>
                           <span className={darkMode ? "text-slate-500" : "text-slate-400"}>•</span>
-                          {/* Removed 💬 0 answers */}
                         </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <Link
+                          to={`/question/${question.id}`}
+                          className="px-4 py-1.5 rounded-xl text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-300"
+                        >
+                          View
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setReportQuestionId(question.id);
+                            setShowReportModal(true);
+                          }}
+                          className="text-xs text-red-500 hover:text-red-700 transition-colors"
+                        >
+                          ⚠️ Report
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -706,32 +797,32 @@ function Home() {
 
           {/* Right Sidebar */}
           <div className="lg:col-span-1 order-3">
-            <div className="space-y-6 sticky top-24">
+            <div className="space-y-5 sticky top-24">
               {/* Quick Actions */}
-              <div className={`p-6 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
-                <h3 className={`font-bold text-sm uppercase tracking-wider mb-4 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+              <div className={`p-5 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
+                <h3 className={`font-bold text-sm uppercase tracking-wider mb-3 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                   Quick Actions
                 </h3>
-                <div className="space-y-3">
-                  <Link to="/ask" className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all duration-300 ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"}`}>
-                    <span className="text-xl">❓</span>
-                    <span className={`text-sm font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>Ask Question</span>
+                <div className="space-y-2">
+                  <Link to="/ask" className={`flex items-center gap-3 w-full p-2.5 rounded-xl transition-all duration-300 text-sm ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"}`}>
+                    <span className="text-lg">❓</span>
+                    <span className={`font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>Ask Question</span>
                   </Link>
-                  <Link to="/myquestions" className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all duration-300 ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"}`}>
-                    <span className="text-xl">📝</span>
-                    <span className={`text-sm font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>My Questions</span>
+                  <Link to="/myquestions" className={`flex items-center gap-3 w-full p-2.5 rounded-xl transition-all duration-300 text-sm ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"}`}>
+                    <span className="text-lg">📝</span>
+                    <span className={`font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>My Questions</span>
                   </Link>
-                  <Link to="/publicchat" className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all duration-300 ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"}`}>
-                    <span className="text-xl">💬</span>
-                    <span className={`text-sm font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>Public Chat</span>
+                  <Link to="/publicchat" className={`flex items-center gap-3 w-full p-2.5 rounded-xl transition-all duration-300 text-sm ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"}`}>
+                    <span className="text-lg">💬</span>
+                    <span className={`font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>Public Chat</span>
                   </Link>
-                  <Link to="/chat" className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all duration-300 ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"}`}>
-                    <span className="text-xl">🔒</span>
-                    <span className={`text-sm font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>Private Chat</span>
+                  <Link to="/chat" className={`flex items-center gap-3 w-full p-2.5 rounded-xl transition-all duration-300 text-sm ${darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"}`}>
+                    <span className="text-lg">🔒</span>
+                    <span className={`font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>Private Chat</span>
                   </Link>
                   {!currentUser && (
                     <div className={`border-t ${darkMode ? "border-slate-700" : "border-slate-200"} pt-3`}>
-                      <Link to="/register" className="block w-full text-center px-4 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-105">
+                      <Link to="/register" className="block w-full text-center px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-105">
                         Join Community
                       </Link>
                     </div>
@@ -740,26 +831,26 @@ function Home() {
               </div>
 
               {/* Community Stats */}
-              <div className={`p-6 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
-                <h3 className={`font-bold text-sm uppercase tracking-wider mb-4 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+              <div className={`p-5 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
+                <h3 className={`font-bold text-sm uppercase tracking-wider mb-3 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                   📊 Community Stats
                 </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-2 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-all duration-300">
-                    <span className={`text-sm ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Total Questions</span>
-                    <span className={`text-sm font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>{stats.total}</span>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center p-1.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-all duration-300 text-sm">
+                    <span className={darkMode ? "text-slate-400" : "text-slate-500"}>Total Questions</span>
+                    <span className={`font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>{stats.total}</span>
                   </div>
-                  <div className="flex justify-between items-center p-2 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-all duration-300">
-                    <span className={`text-sm ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Today's Questions</span>
-                    <span className={`text-sm font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>{stats.today}</span>
+                  <div className="flex justify-between items-center p-1.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-all duration-300 text-sm">
+                    <span className={darkMode ? "text-slate-400" : "text-slate-500"}>Today's Questions</span>
+                    <span className={`font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>{stats.today}</span>
                   </div>
-                  <div className="flex justify-between items-center p-2 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-all duration-300">
-                    <span className={`text-sm ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Community Members</span>
-                    <span className={`text-sm font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>{stats.users}</span>
+                  <div className="flex justify-between items-center p-1.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-all duration-300 text-sm">
+                    <span className={darkMode ? "text-slate-400" : "text-slate-500"}>Community Members</span>
+                    <span className={`font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>{stats.users}</span>
                   </div>
-                  <div className="flex justify-between items-center p-2 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-all duration-300">
-                    <span className={`text-sm ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Answers Given</span>
-                    <span className={`text-sm font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>{stats.answers}</span>
+                  <div className="flex justify-between items-center p-1.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-700/50 transition-all duration-300 text-sm">
+                    <span className={darkMode ? "text-slate-400" : "text-slate-500"}>Answers Given</span>
+                    <span className={`font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>{stats.answers}</span>
                   </div>
                 </div>
               </div>

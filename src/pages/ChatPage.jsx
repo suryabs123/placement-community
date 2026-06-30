@@ -41,7 +41,7 @@ function ChatPage() {
   if (!currentUser) {
     return (
       <div className={`min-h-screen flex justify-center items-center pt-20 ${
-        darkMode ? "bg-slate-900" : "bg-gradient-to-br from-slate-50 via-white to-indigo-50/30"
+        darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"
       }`}>
         <div className={`p-10 rounded-3xl text-center ${
           darkMode
@@ -63,21 +63,21 @@ function ChatPage() {
   if (loading) {
     return (
       <div className={`min-h-screen flex justify-center items-center pt-20 ${
-        darkMode ? "bg-slate-900" : "bg-gradient-to-br from-slate-50 via-white to-indigo-50/30"
+        darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"
       }`}>
-        <div className="w-12 h-12 border-4 border-[#6C63FF]/30 border-t-[#6C63FF] rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-indigo-400/30 border-t-indigo-500 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
     <div className={`min-h-screen pt-20 ${
-      darkMode ? "bg-slate-900" : "bg-gradient-to-br from-slate-50 via-white to-indigo-50/30"
+      darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"
     }`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-4xl font-bold text-[#6C63FF]">🔒 Private Chat</h1>
+            <h1 className="text-4xl font-bold text-indigo-600 dark:text-indigo-400">🔒 Private Chat</h1>
             <p className={`text-sm mt-1 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
               Chat privately with other members
             </p>
@@ -91,30 +91,31 @@ function ChatPage() {
           </span>
         </div>
 
+        {/* Search Users */}
+        <div className="relative mb-5">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <span className="text-slate-400">🔍</span>
+          </div>
+          <input
+            type="text"
+            placeholder="Search users..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className={`w-full pl-12 pr-4 py-3 rounded-2xl border-2 outline-none transition-all duration-300 ${
+              darkMode
+                ? "bg-slate-700/50 border-slate-600 focus:border-indigo-500 text-white placeholder:text-slate-500"
+                : "bg-white/80 border-slate-200 focus:border-indigo-500 shadow-lg"
+            }`}
+          />
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* User List */}
-          <div className={`lg:col-span-1 p-6 rounded-3xl transition-all duration-300 ${
+          <div className={`lg:col-span-1 p-5 rounded-3xl transition-all duration-300 ${
             darkMode
               ? "bg-slate-800/80 border border-white/5"
               : "bg-white/80 backdrop-blur-xl shadow-xl border border-white/20"
           }`}>
-            <div className="relative mb-4">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-slate-400">🔍</span>
-              </div>
-              <input
-                type="text"
-                placeholder="Search users..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className={`w-full pl-10 pr-4 p-3 rounded-xl border-2 outline-none transition-all duration-300 ${
-                  darkMode
-                    ? "bg-slate-700/50 border-slate-600 focus:border-[#6C63FF] text-white placeholder:text-slate-500"
-                    : "border-slate-200 focus:border-[#6C63FF]"
-                }`}
-              />
-            </div>
-
             <div className="space-y-2 max-h-[500px] overflow-y-auto">
               {filteredUsers.length === 0 ? (
                 <div className={`text-center py-8 ${
@@ -131,15 +132,15 @@ function ChatPage() {
                     className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 ${
                       selectedUser?.id === user.id
                         ? darkMode
-                          ? "bg-[#6C63FF]/20 border border-[#6C63FF]/30"
-                          : "bg-[#6C63FF]/10 border border-[#6C63FF]/20"
+                          ? "bg-indigo-500/20 border border-indigo-500/30"
+                          : "bg-indigo-500/10 border border-indigo-500/20"
                         : darkMode
                         ? "hover:bg-slate-700/50"
                         : "hover:bg-slate-100"
                     }`}
                   >
                     <div className="relative flex-shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6C63FF] to-[#3F3D9E] flex items-center justify-center text-white text-sm font-bold">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
                         {user.name?.charAt(0)?.toUpperCase() || "U"}
                       </div>
                       <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white dark:border-slate-800"></div>
@@ -150,7 +151,6 @@ function ChatPage() {
                       }`}>
                         {user.name}
                       </p>
-                      {/* Email removed - only showing name */}
                     </div>
                   </div>
                 ))
