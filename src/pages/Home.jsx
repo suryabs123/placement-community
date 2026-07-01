@@ -346,13 +346,23 @@ function Home() {
 
   return (
     <div className={`min-h-screen ${darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"}`}>
-      {/* Hero Section - Reduced */}
-      <div className={`relative overflow-hidden ${darkMode ? "bg-slate-800" : "bg-gradient-to-br from-indigo-700 via-purple-700 to-pink-700"}`}>
-        <div className="absolute inset-0 bg-white/5"></div>
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-white/10 backdrop-blur-3xl rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-white/10 backdrop-blur-3xl rounded-full blur-3xl"></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+      {/* Hero Section - With College Image Background - No Pink Overlay */}
+      <div className="relative overflow-hidden">
+        {/* College Image Background - Dimmed */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('/college.png')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          {/* Dark overlay to dim the image - No pink/purple gradient */}
+          <div className="absolute inset-0 bg-black/70"></div>
+        </div>
+
+        {/* Hero Content */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="flex-1 text-center lg:text-left">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight">
@@ -393,7 +403,7 @@ function Home() {
               </div>
             </div>
 
-            {/* Stats Cards - Reduced */}
+            {/* Stats Cards */}
             <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
               <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
                 <div className="text-2xl font-bold text-white">{stats.total}</div>
