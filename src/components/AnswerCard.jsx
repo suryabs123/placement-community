@@ -15,12 +15,19 @@ import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
 import ReplyCard from "./ReplyCard";
 
-function AnswerCard({ answer }) {
+function AnswerCard({ answer, onDeleteAnswer }) {
   const { currentUser } = useContext(AuthContext);
   const { darkMode } = useContext(ThemeContext);
   const [replyText, setReplyText] = useState("");
   const [replies, setReplies] = useState([]);
   const [showReplyForm, setShowReplyForm] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [showReportReplyModal, setShowReportReplyModal] = useState(false);
+  const [reportReplyId, setReportReplyId] = useState(null);
+  const [reportReplyReason, setReportReplyReason] = useState("");
+
+  const isAnswerAuthor = currentUser && answer.authorId === currentUser.uid;
 
   // Real-time replies listener - INSTANT UPDATE
   useEffect(() => {
@@ -56,7 +63,6 @@ function AnswerCard({ answer }) {
       });
       setReplyText("");
       setShowReplyForm(false);
-      // UI updates instantly via onSnapshot
     } catch (error) {
       console.log(error);
       alert("Failed to add reply");
@@ -71,11 +77,83 @@ function AnswerCard({ answer }) {
     if (window.confirm("Are you sure you want to delete this reply?")) {
       try {
         await deleteDoc(doc(db, "replies", replyId));
-        // UI updates instantly via onSnapshot
       } catch (error) {
         console.log(error);
         alert("Failed to delete reply");
       }
+    }
+  };
+
+  const handleDeleteAnswer = async () => {
+    if (!currentUser) {
+      alert("Please login first");
+      return;
+    }
+    if (window.confirm("Are you sure you want to delete this answer?")) {
+      try {
+        await deleteDoc(doc(db, "answers", answer.id));
+        onDeleteAnswer(answer.id);
+      } catch (error) {
+        console.log(error);
+        alert("Failed to delete answer");
+      }
+    }
+  };
+
+  const handleReportAnswer = async () => {
+    if (!currentUser) {
+      alert("Please login to report");
+      return;
+    }
+    if (!reportReason.trim()) {
+      alert("Please provide a reason");
+      return;
+    }
+    try {
+      await addDoc(collection(db, "reports"), {
+        answerId: answer.id,
+        reporterId: currentUser.uid,
+        reporterName: currentUser.displayName || currentUser.email,
+        reason: reportReason,
+        createdAt: Timestamp.now(),
+        status: "pending",
+        type: "answer",
+      });
+      alert("Report submitted successfully!");
+      setShowReportModal(false);
+      setReportReason("");
+    } catch (error) {
+      console.log(error);
+      alert("Failed to submit report");
+    }
+  };
+
+  const handleReportReply = async () => {
+    if (!currentUser) {
+      alert("Please login to report");
+      return;
+    }
+    if (!reportReplyReason.trim()) {
+      alert("Please provide a reason");
+      return;
+    }
+    try {
+      await addDoc(collection(db, "reports"), {
+        replyId: reportReplyId,
+        reporterId: currentUser.uid,
+        reporterName: currentUser.displayName || currentUser.email,
+        reason: reportReplyReason,
+        createdAt: Timestamp.now(),
+        status: "pending",
+        type: "reply",
+      });
+      alert("Report submitted successfully!");
+      setShowReportReplyModal(false);
+      setReportReplyReason("");
+      setReportReplyId(null);
+    } catch (error) {
+      console.log(error);
+      alert("Failed to submit report");
     }
   };
 
@@ -107,6 +185,27 @@ function AnswerCard({ answer }) {
               })}
             </p>
           </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Report Answer Button */}
+          <button
+            onClick={() => setShowReportModal(true)}
+            className="text-xs text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+          >
+            ⚠️ Report
+          </button>
+          {/* Delete Answer Button - Only for author */}
+          {isAnswerAuthor && (
+            <button
+              onClick={handleDeleteAnswer}
+              className="text-red-500 hover:text-red-700 transition-colors p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+              title="Delete Answer"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
@@ -162,7 +261,7 @@ function AnswerCard({ answer }) {
         </form>
       )}
 
-      {/* Replies - Real-time */}
+      {/* Replies - Real-time with Delete & Report */}
       {replies.length > 0 && (
         <>
           <h4 className={`font-bold mb-4 flex items-center gap-2 ${
@@ -177,11 +276,92 @@ function AnswerCard({ answer }) {
                 key={reply.id} 
                 reply={reply} 
                 onDelete={handleDeleteReply}
+                onReport={() => {
+                  setReportReplyId(reply.id);
+                  setShowReportReplyModal(true);
+                }}
                 currentUser={currentUser}
               />
             ))}
           </div>
         </>
+      )}
+
+      {/* Report Answer Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className={`p-6 rounded-3xl max-w-md w-full mx-4 ${darkMode ? "bg-slate-800" : "bg-white"}`}>
+            <h3 className={`text-xl font-bold mb-4 ${darkMode ? "text-white" : "text-slate-800"}`}>Report Answer</h3>
+            <textarea
+              placeholder="Why are you reporting this answer?"
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className={`w-full p-3 rounded-xl border-2 outline-none transition-all duration-300 min-h-[100px] ${
+                darkMode
+                  ? "bg-slate-700/50 border-slate-600 focus:border-indigo-500 text-white placeholder:text-slate-500"
+                  : "border-slate-200 focus:border-indigo-500"
+              }`}
+            />
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={handleReportAnswer}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold transition-all duration-300"
+              >
+                Submit Report
+              </button>
+              <button
+                onClick={() => {
+                  setShowReportModal(false);
+                  setReportReason("");
+                }}
+                className={`flex-1 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
+                  darkMode ? "bg-slate-700 hover:bg-slate-600 text-slate-300" : "bg-gray-100 hover:bg-gray-200 text-slate-700"
+                }`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Reply Modal */}
+      {showReportReplyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className={`p-6 rounded-3xl max-w-md w-full mx-4 ${darkMode ? "bg-slate-800" : "bg-white"}`}>
+            <h3 className={`text-xl font-bold mb-4 ${darkMode ? "text-white" : "text-slate-800"}`}>Report Reply</h3>
+            <textarea
+              placeholder="Why are you reporting this reply?"
+              value={reportReplyReason}
+              onChange={(e) => setReportReplyReason(e.target.value)}
+              className={`w-full p-3 rounded-xl border-2 outline-none transition-all duration-300 min-h-[100px] ${
+                darkMode
+                  ? "bg-slate-700/50 border-slate-600 focus:border-indigo-500 text-white placeholder:text-slate-500"
+                  : "border-slate-200 focus:border-indigo-500"
+              }`}
+            />
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={handleReportReply}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold transition-all duration-300"
+              >
+                Submit Report
+              </button>
+              <button
+                onClick={() => {
+                  setShowReportReplyModal(false);
+                  setReportReplyReason("");
+                  setReportReplyId(null);
+                }}
+                className={`flex-1 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
+                  darkMode ? "bg-slate-700 hover:bg-slate-600 text-slate-300" : "bg-gray-100 hover:bg-gray-200 text-slate-700"
+                }`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

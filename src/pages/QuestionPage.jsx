@@ -93,6 +93,10 @@ function QuestionPage() {
     }
   };
 
+  const handleDeleteAnswer = (answerId) => {
+    setAnswers(prev => prev.filter(a => a.id !== answerId));
+  };
+
   const handleDeleteQuestion = async () => {
     if (!currentUser) {
       alert("Please login first");
@@ -143,6 +147,7 @@ function QuestionPage() {
                   <span className="badge badge-success">New</span>
                 )}
               </div>
+              {/* Delete Question Button - Only for question author */}
               {currentUser && question.authorId === currentUser.uid && (
                 <button
                   onClick={handleDeleteQuestion}
@@ -215,7 +220,11 @@ function QuestionPage() {
         ) : (
           <div className="space-y-6">
             {answers.map((ans) => (
-              <AnswerCard key={ans.id} answer={ans} />
+              <AnswerCard 
+                key={ans.id} 
+                answer={ans}
+                onDeleteAnswer={handleDeleteAnswer}
+              />
             ))}
           </div>
         )}
