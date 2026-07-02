@@ -1,7 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
 import Navbar from "./components/Navbar";
-
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -15,6 +13,8 @@ import EditProfile from "./pages/EditProfile";
 import MyQuestions from "./pages/MyQuestions";
 import UserProfile from "./pages/UserProfile";
 import ForgotPassword from "./pages/ForgotPassword";
+import Support from "./pages/Support";
+import ChangePassword from "./pages/ChangePassword";
 
 function App() {
   return (
@@ -46,6 +46,10 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:userId" element={<UserProfile />} />
         <Route path="/editprofile" element={<EditProfile />} />
+        <Route path="/changepassword" element={<ChangePassword />} />
+
+        {/* Support */}
+        <Route path="/support" element={<Support />} />
       </Routes>
     </BrowserRouter>
   );

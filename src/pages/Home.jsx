@@ -346,7 +346,7 @@ function Home() {
 
   return (
     <div className={`min-h-screen ${darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"}`}>
-      {/* Hero Section - With College Image Background - No Pink Overlay */}
+      {/* Hero Section - With College Image Background */}
       <div className="relative overflow-hidden">
         {/* College Image Background - Dimmed */}
         <div 
@@ -357,7 +357,7 @@ function Home() {
             backgroundPosition: 'center',
           }}
         >
-          {/* Dark overlay to dim the image - No pink/purple gradient */}
+          {/* Dark overlay to dim the image */}
           <div className="absolute inset-0 bg-black/70"></div>
         </div>
 
@@ -374,36 +374,9 @@ function Home() {
               <p className="text-base text-white/90 max-w-2xl mx-auto lg:mx-0 mb-5">
                 Ask questions, share knowledge, and get answers from experts and peers.
               </p>
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
-                {!currentUser ? (
-                  <>
-                    <Link to="/register" className="px-6 py-2.5 rounded-xl bg-white text-indigo-600 font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 text-sm">
-                      🚀 Get Started
-                    </Link>
-                    <Link to="/login" className="px-6 py-2.5 rounded-xl border-2 border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-300 text-sm">
-                      Sign In
-                    </Link>
-                  </>
-                ) : (
-                  <Link to="/ask" className="px-6 py-2.5 rounded-xl bg-white text-indigo-600 font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 text-sm">
-                    ❓ Ask a Question
-                  </Link>
-                )}
-              </div>
-              
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mt-4">
-                <div className="flex items-center gap-1.5 text-white/80 text-sm">
-                  <span className="text-lg">👥</span>
-                  <span>Active Community</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-white/80 text-sm">
-                  <span className="text-lg">🎯</span>
-                  <span>Placement Focused</span>
-                </div>
-              </div>
             </div>
 
-            {/* Stats Cards */}
+            {/* Stats Cards - No Icons */}
             <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
               <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
                 <div className="text-2xl font-bold text-white">{stats.total}</div>
@@ -822,13 +795,6 @@ function Home() {
                     <span className="text-lg">🔒</span>
                     <span className={`font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>Private Chat</span>
                   </Link>
-                  {!currentUser && (
-                    <div className={`border-t ${darkMode ? "border-slate-700" : "border-slate-200"} pt-3`}>
-                      <Link to="/register" className="block w-full text-center px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-105">
-                        Join Community
-                      </Link>
-                    </div>
-                  )}
                 </div>
               </div>
 

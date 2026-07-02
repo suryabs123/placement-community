@@ -2,7 +2,7 @@ import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeContext } from "../context/ThemeContext";
 import { auth } from "../firebase/config";
-import { sendPasswordResetEmail } from "firebase/auth";
+import { sendPasswordResetEmail, fetchSignInMethodsForEmail } from "firebase/auth";
 
 function ForgotPassword() {
   const { darkMode } = useContext(ThemeContext);
@@ -24,22 +24,41 @@ function ForgotPassword() {
 
     try {
       setLoading(true);
-      await sendPasswordResetEmail(auth, email);
+      
+      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+      
+      if (signInMethods.length === 0) {
+        setError("No account found with this email address. Please register first.");
+        setLoading(false);
+        return;
+      }
+
+      await sendPasswordResetEmail(auth, email, {
+        url: window.location.origin + "/login",
+        handleCodeInApp: false,
+      });
+      
       setSuccess(true);
       setEmail("");
       
-      // Auto redirect after 3 seconds
+      // Redirect to login after 3 seconds
       setTimeout(() => {
         navigate("/login");
       }, 3000);
+      
     } catch (error) {
-      console.log(error);
+      console.log("Forgot Password Error:", error);
+      
       if (error.code === "auth/user-not-found") {
-        setError("No account found with this email address");
+        setError("No account found with this email address. Please register first.");
       } else if (error.code === "auth/invalid-email") {
-        setError("Invalid email address");
+        setError("Invalid email address. Please check and try again.");
+      } else if (error.code === "auth/too-many-requests") {
+        setError("Too many requests. Please try again later.");
+      } else if (error.code === "auth/network-request-failed") {
+        setError("Network error. Please check your internet connection.");
       } else {
-        setError("Failed to send reset email. Please try again.");
+        setError("Failed to send reset email. Error: " + error.message);
       }
     } finally {
       setLoading(false);
@@ -56,7 +75,6 @@ function ForgotPassword() {
           : "bg-white/80 backdrop-blur-xl shadow-2xl border border-white/20"
       }`}>
         <div className="text-center mb-8">
-          {/* Logo */}
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/25 p-2">
             <img 
               src="/logoo.png" 
@@ -83,7 +101,7 @@ function ForgotPassword() {
 
         {success && (
           <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 text-sm text-center">
-            ✅ Password reset email sent! Check your inbox.
+            ✅ Password reset email sent! Check your inbox and spam folder.
             <br />
             <span className="text-xs opacity-75">Redirecting to login...</span>
           </div>

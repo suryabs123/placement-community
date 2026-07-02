@@ -33,13 +33,14 @@ function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   const navLinks = [
-    { to: "/", label: "Home" },
+    { to: "/", label: "Home"},
     { to: "/ask", label: "Ask" },
     { to: "/myquestions", label: "My Questions" },
-    { to: "/publicchat", label: "Chat"},
+    { to: "/publicchat", label: "Chat" },
     { to: "/chat", label: "Private" },
     { to: "/notifications", label: "Alerts" },
     { to: "/profile", label: "Profile" },
+    { to: "/support", label: "Support" },
   ];
 
   return (
@@ -52,7 +53,7 @@ function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
         <div className="flex items-center justify-between">
-          {/* Logo - Full Text Always Visible on Desktop */}
+          {/* Logo */}
           <Link 
             to="/" 
             className="flex items-center gap-2 group flex-shrink-0 min-w-0"
@@ -65,18 +66,12 @@ function Navbar() {
                   className="w-full h-full object-contain animate-logo"
                 />
               </div>
-              <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white dark:border-slate-900 animate-pulse"></div>
             </div>
-            {/* Full Text - Always visible on larger screens */}
             <div className="hidden sm:block min-w-0">
               <span className="text-sm lg:text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent whitespace-nowrap">
                 CIT Placement Community
               </span>
-              <p className="text-[8px] lg:text-[10px] font-medium text-slate-400 dark:text-slate-500 -mt-0.5 tracking-wider uppercase">
-                Placement Hub
-              </p>
             </div>
-            {/* Short Text for very small screens */}
             <div className="sm:hidden block">
               <span className="text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent whitespace-nowrap">
                 CIT
@@ -84,7 +79,7 @@ function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop Navigation - Hidden on Mobile */}
+          {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-0.5 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-2xl p-1 border border-slate-200/50 dark:border-slate-700/50 overflow-x-auto">
             {navLinks.map((link) => (
               <Link
@@ -159,7 +154,6 @@ function Navbar() {
               )}
             </button>
 
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-300 hover:scale-110"
