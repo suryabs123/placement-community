@@ -269,7 +269,7 @@ function Support() {
               <div className="flex gap-3">
                 <input
                   type="text"
-                  placeholder="Ask me anything about placements..."
+                  placeholder="Ask me  about placements..."
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
