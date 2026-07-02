@@ -28,7 +28,7 @@ function Support() {
 
   // ========== YOUR EMAILJS KEYS ==========
   const EMAILJS_SERVICE_ID = "service_ul24lzq";
-  const EMAILJS_TEMPLATE_ID = "template_xeq7g1s"; // ⚠️ REPLACE with your Template ID
+  const EMAILJS_TEMPLATE_ID = "template_xeq7g1s"; 
   const EMAILJS_PUBLIC_KEY = "3oq-tpuko9dW9nIsA";
   // =========================================
 
