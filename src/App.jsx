@@ -22,33 +22,20 @@ function App() {
       <Navbar />
 
       <Routes>
-        {/* Home */}
         <Route path="/" element={<Home />} />
-
-        {/* Authentication */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgotpassword" element={<ForgotPassword />} />
-
-        {/* Questions */}
         <Route path="/ask" element={<AskQuestion />} />
         <Route path="/question/:id" element={<QuestionPage />} />
         <Route path="/myquestions" element={<MyQuestions />} />
-
-        {/* Chats */}
         <Route path="/publicchat" element={<PublicChat />} />
         <Route path="/chat" element={<ChatPage />} />
-
-        {/* Notifications */}
         <Route path="/notifications" element={<Notifications />} />
-
-        {/* Profile */}
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:userId" element={<UserProfile />} />
         <Route path="/editprofile" element={<EditProfile />} />
         <Route path="/changepassword" element={<ChangePassword />} />
-
-        {/* Support */}
         <Route path="/support" element={<Support />} />
       </Routes>
     </BrowserRouter>
