@@ -2,6 +2,7 @@ import { useState, useContext, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ThemeContext } from "../context/ThemeContext";
 import { AuthContext } from "../context/AuthContext";
+import emailjs from '@emailjs/browser';
 
 function Support() {
   const { darkMode } = useContext(ThemeContext);
@@ -20,9 +21,18 @@ function Support() {
   const [emailSubject, setEmailSubject] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
   const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [emailSuccess, setEmailSuccess] = useState("");
   const messagesEndRef = useRef(null);
+  const formRef = useRef();
 
-  // Bot responses based on keywords
+  // ========== YOUR EMAILJS KEYS ==========
+  const EMAILJS_SERVICE_ID = "service_ul24lzq";
+  const EMAILJS_TEMPLATE_ID = "template_xeq7g1s"; // ⚠️ REPLACE with your Template ID
+  const EMAILJS_PUBLIC_KEY = "3oq-tpuko9dW9nIsA";
+  // =========================================
+
+  // Bot responses
   const botResponses = {
     "placement": "📋 **Placement Process:**\n\n1. Companies visit campus for recruitment\n2. Students register for drives\n3. Online tests are conducted\n4. Technical interviews\n5. HR interviews\n6. Offer letters are issued\n\nNeed help with any specific step?",
     
@@ -30,7 +40,7 @@ function Support() {
     
     "interview": "🎯 **Interview Preparation:**\n\n1. Research the company\n2. Practice common questions\n3. Prepare your introduction\n4. Review your projects\n5. Practice coding problems\n6. Prepare questions to ask\n\nWant specific tips for technical or HR interviews?",
     
-    "coding": "💻 **Coding Preparation:**\n\n🔹 Practice on platforms like:\n- LeetCode\n- HackerRank\n- CodeChef\n- GeeksforGeeks\n\n🔹 Focus on:\n- Data Structures\n- Algorithms\n- Problem Solving\n- Time Complexity\n\nNeed help with specific topics?",
+    "coding": "💻 **Coding Preparation:**\n\n🔹 Practice on platforms like:\n- LeetCode\n- HackerRank\n- CodeChef\n- GeeksforGeeks\n\n🔹 Focus on:\n- Data Structures\n- Algorithms\n- Problem Solving\n- Time Complexity",
     
     "dsa": "📊 **DSA Topics to Master:**\n\n1. Arrays & Strings\n2. Linked Lists\n3. Stacks & Queues\n4. Trees & Graphs\n5. Dynamic Programming\n6. Sorting & Searching\n7. Recursion\n\nWhich topic would you like to learn more about?",
     
@@ -74,7 +84,6 @@ function Support() {
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
-    // Add user message
     const userMsg = {
       id: messages.length + 1,
       text: inputMessage,
@@ -85,7 +94,6 @@ function Support() {
     setInputMessage("");
     setIsTyping(true);
 
-    // Simulate bot thinking
     setTimeout(() => {
       const botResponse = getBotResponse(inputMessage);
       const botMsg = {
@@ -107,19 +115,45 @@ function Support() {
 
   const handleSendEmail = async (e) => {
     e.preventDefault();
+    setEmailError("");
+    setEmailSuccess("");
+    setEmailSent(true);
+
     if (!emailSubject.trim() || !emailMessage.trim()) {
-      alert("Please fill all fields");
+      setEmailError("Please fill all fields");
+      setEmailSent(false);
       return;
     }
-    
-    // Simulate sending email
-    setEmailSent(true);
-    setTimeout(() => {
+
+    try {
+      const templateParams = {
+        from_name: currentUser?.displayName || "User",
+        from_email: currentUser?.email || "No email",
+        subject: emailSubject,
+        message: emailMessage,
+      };
+
+      const result = await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        templateParams,
+        EMAILJS_PUBLIC_KEY
+      );
+
+      if (result.status === 200) {
+        setEmailSuccess("✅ Your message has been sent! We'll get back to you within 24 hours.");
+        setEmailSubject("");
+        setEmailMessage("");
+        setTimeout(() => {
+          setEmailSuccess("");
+        }, 5000);
+      }
+    } catch (error) {
+      console.log("Email error:", error);
+      setEmailError("❌ Failed to send email. Please try again.");
+    } finally {
       setEmailSent(false);
-      setEmailSubject("");
-      setEmailMessage("");
-      alert("✅ Your message has been sent! We'll get back to you within 24 hours.");
-    }, 1500);
+    }
   };
 
   useEffect(() => {
@@ -131,7 +165,6 @@ function Support() {
       darkMode ? "bg-slate-900 text-white" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"
     }`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-indigo-600 dark:text-indigo-400">
             🆘 Support Center
@@ -141,7 +174,6 @@ function Support() {
           </p>
         </div>
 
-        {/* Tabs */}
         <div className={`flex rounded-2xl p-1 mb-8 ${
           darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/80 backdrop-blur-sm shadow-lg border border-white/50"
         }`}>
@@ -171,12 +203,10 @@ function Support() {
           </button>
         </div>
 
-        {/* Chat Bot Tab */}
         {activeTab === "bot" && (
           <div className={`rounded-3xl overflow-hidden ${
             darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-xl border border-white/50"
           }`}>
-            {/* Chat Header */}
             <div className={`p-4 border-b ${darkMode ? "border-slate-700" : "border-slate-200"} flex items-center gap-3`}>
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xl">
                 🤖
@@ -195,7 +225,6 @@ function Support() {
               </div>
             </div>
 
-            {/* Chat Messages */}
             <div className="h-[400px] overflow-y-auto p-4 space-y-3">
               {messages.map((msg) => (
                 <div
@@ -236,7 +265,6 @@ function Support() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Chat Input */}
             <div className={`p-4 border-t ${darkMode ? "border-slate-700" : "border-slate-200"}`}>
               <div className="flex gap-3">
                 <input
@@ -266,7 +294,6 @@ function Support() {
           </div>
         )}
 
-        {/* Email Support Tab */}
         {activeTab === "email" && (
           <div className={`rounded-3xl p-8 ${
             darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-xl border border-white/50"
@@ -285,7 +312,18 @@ function Support() {
               </div>
             </div>
 
-            <form onSubmit={handleSendEmail} className="space-y-5">
+            {emailError && (
+              <div className="mb-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+                {emailError}
+              </div>
+            )}
+            {emailSuccess && (
+              <div className="mb-4 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 text-sm">
+                {emailSuccess}
+              </div>
+            )}
+
+            <form ref={formRef} onSubmit={handleSendEmail} className="space-y-5">
               <div>
                 <label className={`text-sm font-medium block mb-2 ${
                   darkMode ? "text-slate-300" : "text-slate-700"
