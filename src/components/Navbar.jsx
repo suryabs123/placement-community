@@ -33,13 +33,13 @@ function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   const navLinks = [
-    { to: "/", label: "Home"},
+    { to: "/", label: "Home" },
     { to: "/ask", label: "Ask" },
     { to: "/myquestions", label: "My Questions" },
-    { to: "/publicchat", label: "Chat" },
+    { to: "/publicchat", label: "Chat"},
     { to: "/chat", label: "Private" },
     { to: "/notifications", label: "Alerts" },
-    { to: "/profile", label: "Profile" },
+    { to: "/profile", label: "Profile"},
     { to: "/support", label: "Support" },
   ];
 
@@ -69,7 +69,7 @@ function Navbar() {
             </div>
             <div className="hidden sm:block min-w-0">
               <span className="text-sm lg:text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent whitespace-nowrap">
-                CIT  Community
+                CIT Community
               </span>
             </div>
             <div className="sm:hidden block">
@@ -138,6 +138,8 @@ function Navbar() {
               </div>
             )}
 
+            
+
             <button
               onClick={toggleTheme}
               className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-300 hover:scale-110 hover:rotate-12"
@@ -204,6 +206,16 @@ function Navbar() {
                 )}
               </Link>
             ))}
+            
+            {/* Mobile ChitChat Logo */}
+            <Link
+              to="/publicchat"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300"
+            >
+             
+            </Link>
+
             {!currentUser ? (
               <div className="pt-4 border-t border-slate-200 dark:border-slate-700 space-y-2">
                 <Link
