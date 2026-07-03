@@ -69,7 +69,7 @@ function Navbar() {
             </div>
             <div className="hidden sm:block min-w-0">
               <span className="text-sm lg:text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent whitespace-nowrap">
-                CIT Placement Community
+                CIT  Community
               </span>
             </div>
             <div className="sm:hidden block">

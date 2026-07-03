@@ -366,9 +366,9 @@ function Home() {
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="flex-1 text-center lg:text-left">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight">
-                Welcome to
+                Welcome to Chit-Chat
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-pink-200">
-                  CIT Placement Community
+                   Peer Learning platform For CIT
                 </span>
               </h1>
               <p className="text-base text-white/90 max-w-2xl mx-auto lg:mx-0 mb-5">
