@@ -31,6 +31,7 @@ function QuestionPage() {
   useEffect(() => {
     fetchQuestion();
     
+    // ✅ REAL-TIME answers listener using onSnapshot
     const q = query(
       collection(db, "answers"),
       where("questionId", "==", id),
@@ -44,9 +45,12 @@ function QuestionPage() {
       }));
       setAnswers(data);
       
+      // Update the question's answersCount in real-time
       updateDoc(doc(db, "questions", id), {
         answersCount: data.length,
       }).catch(() => {});
+    }, (error) => {
+      console.log("Error fetching answers:", error);
     });
     
     return () => unsubscribe();
@@ -87,6 +91,7 @@ function QuestionPage() {
         upvotes: 0,
       });
       setAnswer("");
+      // ✅ onSnapshot will update automatically - NO RELOAD NEEDED
     } catch (error) {
       console.log(error);
       alert("Failed to post answer");
@@ -147,7 +152,6 @@ function QuestionPage() {
                   <span className="badge badge-success">New</span>
                 )}
               </div>
-              {/* Delete Question Button - Only for question author */}
               {currentUser && question.authorId === currentUser.uid && (
                 <button
                   onClick={handleDeleteQuestion}

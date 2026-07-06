@@ -41,7 +41,7 @@ function Home() {
     { name: "Projects", icon: "🚀", color: "from-violet-500 to-purple-600" },
   ];
 
-  // Real-time questions listener
+  // ✅ Real-time questions listener - Already correct
   useEffect(() => {
     const q = query(
       collection(db, "questions"),
@@ -80,7 +80,7 @@ function Home() {
     return () => unsubscribe();
   }, []);
 
-  // Real-time users count
+  // ✅ Real-time users count - Already correct
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -104,103 +104,118 @@ function Home() {
     return () => unsubscribe();
   }, []);
 
-  // Real-time top contributors
+  // ✅ FIXED: Real-time top contributors using onSnapshot
   useEffect(() => {
-    const fetchTopContributors = async () => {
-      try {
-        const questionsSnapshot = await getDocs(collection(db, "questions"));
-        const questionsData = questionsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+    const fetchTopContributors = () => {
+      // Listen to questions in real-time
+      const questionsUnsubscribe = onSnapshot(
+        collection(db, "questions"),
+        async (questionsSnapshot) => {
+          try {
+            const questionsData = questionsSnapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
 
-        const contributorMap = {};
-        questionsData.forEach(q => {
-          const authorId = q.authorId;
-          const authorName = q.author || "Unknown";
-          if (authorId) {
-            if (!contributorMap[authorId]) {
-              contributorMap[authorId] = {
-                name: authorName,
-                id: authorId,
-                questions: 0,
-                answers: 0,
-                replies: 0,
-              };
-            }
-            contributorMap[authorId].questions += 1;
+            // Get answers and replies (one-time fetch, but updates when questions change)
+            const [answersSnapshot, repliesSnapshot] = await Promise.all([
+              getDocs(collection(db, "answers")),
+              getDocs(collection(db, "replies")),
+            ]);
+
+            const contributorMap = {};
+
+            // Process questions
+            questionsData.forEach(q => {
+              const authorId = q.authorId;
+              const authorName = q.author || "Unknown";
+              if (authorId) {
+                if (!contributorMap[authorId]) {
+                  contributorMap[authorId] = {
+                    name: authorName,
+                    id: authorId,
+                    questions: 0,
+                    answers: 0,
+                    replies: 0,
+                  };
+                }
+                contributorMap[authorId].questions += 1;
+              }
+            });
+
+            // Process answers
+            answersSnapshot.docs.forEach(doc => {
+              const data = doc.data();
+              const authorId = data.authorId;
+              const authorName = data.author || "Unknown";
+              if (authorId) {
+                if (!contributorMap[authorId]) {
+                  contributorMap[authorId] = {
+                    name: authorName,
+                    id: authorId,
+                    questions: 0,
+                    answers: 0,
+                    replies: 0,
+                  };
+                }
+                contributorMap[authorId].answers += 1;
+              }
+            });
+
+            // Process replies
+            repliesSnapshot.docs.forEach(doc => {
+              const data = doc.data();
+              const authorId = data.authorId;
+              const authorName = data.author || "Unknown";
+              if (authorId) {
+                if (!contributorMap[authorId]) {
+                  contributorMap[authorId] = {
+                    name: authorName,
+                    id: authorId,
+                    questions: 0,
+                    answers: 0,
+                    replies: 0,
+                  };
+                }
+                contributorMap[authorId].replies = (contributorMap[authorId].replies || 0) + 1;
+              }
+            });
+
+            const contributors = Object.values(contributorMap).map(user => ({
+              ...user,
+              total: (user.questions || 0) + (user.answers || 0) + (user.replies || 0),
+            }));
+
+            const filtered = contributors.filter(user => user.total > 50);
+            
+            const sorted = filtered
+              .sort((a, b) => b.total - a.total)
+              .slice(0, 5);
+
+            const withRoles = sorted.map((user, index) => {
+              let role = "Member";
+              if (user.total > 100) role = "🏆 Top Contributor";
+              else if (user.total > 70) role = "Expert";
+              else if (user.total > 50) role = "Active Member";
+              return { ...user, role };
+            });
+
+            setTopContributors(withRoles);
+          } catch (error) {
+            console.log(error);
           }
-        });
+        },
+        (error) => {
+          console.log("Error in top contributors listener:", error);
+        }
+      );
 
-        const answersSnapshot = await getDocs(collection(db, "answers"));
-        answersSnapshot.docs.forEach(doc => {
-          const data = doc.data();
-          const authorId = data.authorId;
-          const authorName = data.author || "Unknown";
-          if (authorId) {
-            if (!contributorMap[authorId]) {
-              contributorMap[authorId] = {
-                name: authorName,
-                id: authorId,
-                questions: 0,
-                answers: 0,
-                replies: 0,
-              };
-            }
-            contributorMap[authorId].answers += 1;
-          }
-        });
-
-        const repliesSnapshot = await getDocs(collection(db, "replies"));
-        repliesSnapshot.docs.forEach(doc => {
-          const data = doc.data();
-          const authorId = data.authorId;
-          const authorName = data.author || "Unknown";
-          if (authorId) {
-            if (!contributorMap[authorId]) {
-              contributorMap[authorId] = {
-                name: authorName,
-                id: authorId,
-                questions: 0,
-                answers: 0,
-                replies: 0,
-              };
-            }
-            contributorMap[authorId].replies = (contributorMap[authorId].replies || 0) + 1;
-          }
-        });
-
-        const contributors = Object.values(contributorMap).map(user => ({
-          ...user,
-          total: (user.questions || 0) + (user.answers || 0) + (user.replies || 0),
-        }));
-
-        const filtered = contributors.filter(user => user.total > 50);
-        
-        const sorted = filtered
-          .sort((a, b) => b.total - a.total)
-          .slice(0, 5);
-
-        const withRoles = sorted.map((user, index) => {
-          let role = "Member";
-          if (user.total > 100) role = "🏆 Top Contributor";
-          else if (user.total > 70) role = "Expert";
-          else if (user.total > 50) role = "Active Member";
-          return { ...user, role };
-        });
-
-        setTopContributors(withRoles);
-      } catch (error) {
-        console.log(error);
-      }
+      return questionsUnsubscribe;
     };
 
-    fetchTopContributors();
-    const unsubscribeQuestions = onSnapshot(collection(db, "questions"), () => {
-      fetchTopContributors();
-    });
+    const unsubscribe = fetchTopContributors();
     return () => {
-      unsubscribeQuestions();
+      if (unsubscribe) unsubscribe();
     };
   }, []);
 
@@ -518,7 +533,7 @@ function Home() {
                 </div>
               </div>
 
-              {/* Top Contributors */}
+              {/* Top Contributors - Now Real-time */}
               <div className={`p-5 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
                 <h3 className={`font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                   🏆 Top Contributors

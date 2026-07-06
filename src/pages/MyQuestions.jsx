@@ -19,13 +19,13 @@ function MyQuestions() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ REAL-TIME listener using onSnapshot
   useEffect(() => {
     if (!currentUser) {
       setLoading(false);
       return;
     }
 
-    // Fixed: Query questions where authorId matches current user
     const q = query(
       collection(db, "questions"),
       where("authorId", "==", currentUser.uid),
@@ -37,7 +37,6 @@ function MyQuestions() {
         id: doc.id,
         ...doc.data(),
       }));
-      console.log("My Questions:", data); // Debug log
       setQuestions(data);
       setLoading(false);
     }, (error) => {
@@ -52,7 +51,7 @@ function MyQuestions() {
     if (window.confirm("Are you sure you want to delete this question?")) {
       try {
         await deleteDoc(doc(db, "questions", questionId));
-        alert("Question deleted successfully!");
+        // ✅ onSnapshot will update automatically - NO RELOAD NEEDED
       } catch (error) {
         console.log(error);
         alert("Failed to delete question");
@@ -65,7 +64,7 @@ function MyQuestions() {
       <div className={`min-h-screen flex justify-center items-center pt-20 ${
         darkMode ? "bg-slate-900 text-white" : "bg-gray-100 text-black"
       }`}>
-        <div className={`p-10 rounded-3xl shadow-xl text-center ${
+        <div className={`p-10 rounded-3xl text-center ${
           darkMode ? "bg-slate-800" : "bg-white"
         }`}>
           <h1 className="text-3xl font-bold mb-4">🔒 Login Required</h1>
@@ -142,7 +141,6 @@ function MyQuestions() {
                           year: "numeric"
                         })}
                       </span>
-                      {/* Removed 💬 0 answers */}
                     </div>
                     <Link to={`/question/${question.id}`}>
                       <h2 className={`text-xl font-bold mb-2 hover:text-indigo-500 transition-colors ${darkMode ? "text-white" : "text-slate-800"}`}>

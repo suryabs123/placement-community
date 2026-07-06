@@ -44,7 +44,6 @@ function ReplyCard({ reply, onDelete, onReport, currentUser }) {
         </div>
         
         <div className="flex items-center gap-1">
-          {/* Report Reply Button - Anyone can report */}
           <button
             onClick={onReport}
             className="text-red-400 hover:text-red-600 transition-colors p-1 text-xs"
@@ -52,7 +51,6 @@ function ReplyCard({ reply, onDelete, onReport, currentUser }) {
           >
             ⚠️
           </button>
-          {/* Delete Reply Button - Only for reply author */}
           {isAuthor && (
             <button
               onClick={handleDeleteClick}

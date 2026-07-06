@@ -18,14 +18,14 @@ function AskQuestion() {
   const [loading, setLoading] = useState(false);
 
   const popularTopics = [
-    { name: "DSA", icon: "📊", color: "from-blue-500 to-blue-600" },
-    { name: "Web Development", icon: "🌐", color: "from-purple-500 to-purple-600" },
-    { name: "Aptitude", icon: "🧮", color: "from-green-500 to-green-600" },
-    { name: "Interview Prep", icon: "🎯", color: "from-red-500 to-red-600" },
-    { name: "Coding", icon: "💻", color: "from-yellow-500 to-orange-500" },
-    { name: "Placements", icon: "🏢", color: "from-pink-500 to-rose-500" },
-    { name: "Resume", icon: "📄", color: "from-cyan-500 to-blue-500" },
-    { name: "Projects", icon: "🚀", color: "from-indigo-500 to-purple-500" },
+    { name: "DSA", icon: "📊", color: "from-blue-400 to-blue-500" },
+    { name: "Web Development", icon: "🌐", color: "from-purple-400 to-purple-500" },
+    { name: "Aptitude", icon: "🧮", color: "from-green-400 to-green-500" },
+    { name: "Interview Prep", icon: "🎯", color: "from-rose-400 to-rose-500" },
+    { name: "Coding", icon: "💻", color: "from-amber-400 to-orange-500" },
+    { name: "Placements", icon: "🏢", color: "from-pink-400 to-rose-500" },
+    { name: "Resume", icon: "📄", color: "from-cyan-400 to-blue-500" },
+    { name: "Projects", icon: "🚀", color: "from-indigo-400 to-purple-500" },
   ];
 
   const handleSubmit = async (e) => {
@@ -41,9 +41,9 @@ function AskQuestion() {
     try {
       setLoading(true);
       await addDoc(collection(db, "questions"), {
-        title,
-        description,
-        topics: selectedTopics, // Save selected topics
+        title: title.trim(),
+        description: description.trim(),
+        topics: selectedTopics,
         author: currentUser.displayName || currentUser.email,
         authorId: currentUser.uid,
         createdAt: Timestamp.now(),
@@ -155,7 +155,6 @@ function AskQuestion() {
               />
             </div>
 
-            {/* Topic Selection */}
             <div>
               <label className={`text-sm font-medium block mb-2 ${
                 darkMode ? "text-slate-300" : "text-slate-700"

@@ -29,7 +29,7 @@ function AnswerCard({ answer, onDeleteAnswer }) {
 
   const isAnswerAuthor = currentUser && answer.authorId === currentUser.uid;
 
-  // Real-time replies listener - INSTANT UPDATE
+  // ✅ REAL-TIME replies listener using onSnapshot
   useEffect(() => {
     const q = query(
       collection(db, "replies"),
@@ -42,6 +42,8 @@ function AnswerCard({ answer, onDeleteAnswer }) {
         ...doc.data(),
       }));
       setReplies(data);
+    }, (error) => {
+      console.log("Error fetching replies:", error);
     });
     return () => unsubscribe();
   }, [answer.id]);
@@ -63,6 +65,7 @@ function AnswerCard({ answer, onDeleteAnswer }) {
       });
       setReplyText("");
       setShowReplyForm(false);
+      // ✅ onSnapshot will update automatically - NO RELOAD NEEDED
     } catch (error) {
       console.log(error);
       alert("Failed to add reply");
@@ -77,6 +80,7 @@ function AnswerCard({ answer, onDeleteAnswer }) {
     if (window.confirm("Are you sure you want to delete this reply?")) {
       try {
         await deleteDoc(doc(db, "replies", replyId));
+        // ✅ onSnapshot will update automatically - NO RELOAD NEEDED
       } catch (error) {
         console.log(error);
         alert("Failed to delete reply");
@@ -187,14 +191,12 @@ function AnswerCard({ answer, onDeleteAnswer }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* Report Answer Button */}
           <button
             onClick={() => setShowReportModal(true)}
             className="text-xs text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
           >
             ⚠️ Report
           </button>
-          {/* Delete Answer Button - Only for author */}
           {isAnswerAuthor && (
             <button
               onClick={handleDeleteAnswer}
@@ -261,7 +263,7 @@ function AnswerCard({ answer, onDeleteAnswer }) {
         </form>
       )}
 
-      {/* Replies - Real-time with Delete & Report */}
+      {/* Replies - REAL-TIME */}
       {replies.length > 0 && (
         <>
           <h4 className={`font-bold mb-4 flex items-center gap-2 ${
