@@ -29,6 +29,12 @@ function Home() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportQuestionId, setReportQuestionId] = useState(null);
   const [reportReason, setReportReason] = useState("");
+  
+  // Popup states
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupTitle, setPopupTitle] = useState("");
+  const [popupData, setPopupData] = useState([]);
+  const [popupType, setPopupType] = useState("");
 
   const popularTopics = [
     { name: "DSA", icon: "📊", color: "from-indigo-500 to-indigo-600" },
@@ -41,7 +47,7 @@ function Home() {
     { name: "Projects", icon: "🚀", color: "from-violet-500 to-purple-600" },
   ];
 
-  // ✅ Real-time questions listener - Already correct
+  // Real-time questions listener
   useEffect(() => {
     const q = query(
       collection(db, "questions"),
@@ -80,15 +86,21 @@ function Home() {
     return () => unsubscribe();
   }, []);
 
-  // ✅ Real-time users count - Already correct
+  // Real-time users count
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const usersSnapshot = await getDocs(collection(db, "users"));
+        const usersList = usersSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setStats(prev => ({
           ...prev,
           users: usersSnapshot.size,
         }));
+        // Store users for popup
+        setPopupData(usersList);
       } catch (error) {
         console.log(error);
       }
@@ -96,18 +108,22 @@ function Home() {
     fetchUsers();
 
     const unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
+      const usersList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setStats(prev => ({
         ...prev,
         users: snapshot.size,
       }));
+      setPopupData(usersList);
     });
     return () => unsubscribe();
   }, []);
 
-  // ✅ FIXED: Real-time top contributors using onSnapshot
+  // Real-time top contributors
   useEffect(() => {
     const fetchTopContributors = () => {
-      // Listen to questions in real-time
       const questionsUnsubscribe = onSnapshot(
         collection(db, "questions"),
         async (questionsSnapshot) => {
@@ -117,7 +133,6 @@ function Home() {
               ...doc.data(),
             }));
 
-            // Get answers and replies (one-time fetch, but updates when questions change)
             const [answersSnapshot, repliesSnapshot] = await Promise.all([
               getDocs(collection(db, "answers")),
               getDocs(collection(db, "replies")),
@@ -125,7 +140,6 @@ function Home() {
 
             const contributorMap = {};
 
-            // Process questions
             questionsData.forEach(q => {
               const authorId = q.authorId;
               const authorName = q.author || "Unknown";
@@ -143,7 +157,6 @@ function Home() {
               }
             });
 
-            // Process answers
             answersSnapshot.docs.forEach(doc => {
               const data = doc.data();
               const authorId = data.authorId;
@@ -162,7 +175,6 @@ function Home() {
               }
             });
 
-            // Process replies
             repliesSnapshot.docs.forEach(doc => {
               const data = doc.data();
               const authorId = data.authorId;
@@ -218,6 +230,46 @@ function Home() {
       if (unsubscribe) unsubscribe();
     };
   }, []);
+
+  // Handle stat card click - ONLY for Members and Asked Today
+  const handleStatClick = (type) => {
+    if (type === "members") {
+      setPopupTitle("👥 Community Members");
+      setPopupType("members");
+      setShowPopup(true);
+    } else if (type === "today") {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayQuestions = questions.filter(q => {
+        const date = q.createdAt?.toDate();
+        return date && date >= today;
+      });
+      setPopupTitle("📅 Today's Questions");
+      setPopupType("today");
+      setPopupData(todayQuestions);
+      setShowPopup(true);
+    }
+  };
+
+  // Get data for popup based on type
+  const getPopupItems = () => {
+    if (popupType === "members") {
+      return popupData.map(user => ({
+        id: user.id,
+        name: user.name || "User",
+        email: user.email,
+        icon: "👤"
+      }));
+    } else if (popupType === "today") {
+      return popupData.map(q => ({
+        id: q.id,
+        name: q.title,
+        subtitle: q.author,
+        icon: "📅"
+      }));
+    }
+    return [];
+  };
 
   const handleReport = async () => {
     if (!currentUser) {
@@ -351,6 +403,9 @@ function Home() {
     return new Date(year, month).toLocaleString('default', { month: 'long' }) + ' ' + year;
   };
 
+  // Popup items
+  const popupItems = getPopupItems();
+
   if (loading) {
     return (
       <div className={`min-h-screen flex justify-center items-center ${darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/50"}`}>
@@ -363,7 +418,6 @@ function Home() {
     <div className={`min-h-screen ${darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"}`}>
       {/* Hero Section - With College Image Background */}
       <div className="relative overflow-hidden">
-        {/* College Image Background - Dimmed */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
@@ -372,11 +426,9 @@ function Home() {
             backgroundPosition: 'center',
           }}
         >
-          {/* Dark overlay to dim the image */}
           <div className="absolute inset-0 bg-black/70"></div>
         </div>
 
-        {/* Hero Content */}
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="flex-1 text-center lg:text-left">
@@ -391,17 +443,23 @@ function Home() {
               </p>
             </div>
 
-            {/* Stats Cards - No Icons */}
+            {/* Stats Cards - Clickable (Members & Asked Today only) */}
             <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
               <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
                 <div className="text-2xl font-bold text-white">{stats.total}</div>
                 <div className="text-xs text-white/80 mt-0.5">Questions</div>
               </div>
-              <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
+              <div 
+                onClick={() => handleStatClick("today")}
+                className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105 cursor-pointer"
+              >
                 <div className="text-2xl font-bold text-white">{stats.today}</div>
                 <div className="text-xs text-white/80 mt-0.5">Asked Today</div>
               </div>
-              <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
+              <div 
+                onClick={() => handleStatClick("members")}
+                className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105 cursor-pointer"
+              >
                 <div className="text-2xl font-bold text-white">{stats.users}</div>
                 <div className="text-xs text-white/80 mt-0.5">Members</div>
               </div>
@@ -413,6 +471,88 @@ function Home() {
           </div>
         </div>
       </div>
+
+      {/* Stats Popup Modal */}
+      {showPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className={`p-6 rounded-3xl max-w-md w-full mx-4 max-h-[80vh] flex flex-col ${
+            darkMode ? "bg-slate-800 border border-slate-700/50" : "bg-white border border-white/20"
+          }`}>
+            {/* Popup Header */}
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
+              <h3 className={`text-xl font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>
+                {popupTitle}
+              </h3>
+              <span className={`text-sm ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+                {popupItems.length} items
+              </span>
+            </div>
+            
+            {/* Popup Body - Scrollable */}
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+              {popupType === "members" && popupItems.length > 0 ? (
+                popupItems.map((item, index) => (
+                  <div 
+                    key={item.id || index}
+                    className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${
+                      darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                      {item.name?.charAt(0)?.toUpperCase() || "U"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-medium truncate ${darkMode ? "text-white" : "text-slate-800"}`}>
+                        {item.name}
+                      </p>
+                      <p className={`text-xs truncate ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        {item.email}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : popupType === "today" && popupItems.length > 0 ? (
+                popupItems.map((item, index) => (
+                  <div 
+                    key={item.id || index}
+                    className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${
+                      darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white text-sm flex-shrink-0">
+                      📅
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-medium truncate ${darkMode ? "text-white" : "text-slate-800"}`}>
+                        {item.name}
+                      </p>
+                      <p className={`text-xs truncate ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        by {item.subtitle}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className={`text-center py-8 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  <p className="text-3xl mb-2">📭</p>
+                  <p>No items found</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setShowPopup(false);
+                setPopupData([]);
+              }}
+              className="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/30 hover:scale-105"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Report Modal */}
       {showReportModal && (
@@ -533,7 +673,7 @@ function Home() {
                 </div>
               </div>
 
-              {/* Top Contributors - Now Real-time */}
+              {/* Top Contributors */}
               <div className={`p-5 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
                 <h3 className={`font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                   🏆 Top Contributors

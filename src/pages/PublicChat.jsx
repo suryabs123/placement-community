@@ -64,6 +64,32 @@ function PublicChat() {
     msg.senderName?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Group messages by date (like private chat)
+  const getMessageGroups = () => {
+    const groups = {};
+    filteredMessages.forEach(msg => {
+      const date = msg.createdAt?.toDate();
+      if (!date) return;
+      const dateKey = date.toDateString();
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(msg);
+    });
+    return groups;
+  };
+
+  const messageGroups = getMessageGroups();
+
+  const formatMessageTime = (timestamp) => {
+    if (!timestamp) return "";
+    const date = timestamp.toDate();
+    let hours = date.getHours();
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12 || 12;
+    return `${hours}:${String(date.getMinutes()).padStart(2, '0')} ${ampm}`;
+  };
+
   return (
     <div className={`min-h-screen pt-24 ${
       darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"
@@ -104,11 +130,11 @@ function PublicChat() {
           />
         </div>
 
-        {/* Name Input - Anyone can chat */}
+        {/* Name Input - Removed "(optional)" */}
         <div className="flex gap-3 mb-4">
           <input
             type="text"
-            placeholder="Enter your name (optional)..."
+            placeholder="Enter your name"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
             className={`flex-1 p-3 rounded-xl border-2 outline-none transition-all duration-300 ${
@@ -138,67 +164,80 @@ function PublicChat() {
               </p>
             </div>
           ) : (
-            filteredMessages.map((msg) => {
-              const isMine = msg.senderId?.startsWith("guest_");
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex mb-5 ${
-                    isMine ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  {!isMine && (
-                    <div className="flex-shrink-0 mr-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                        {msg.senderName?.charAt(0)?.toUpperCase() || "U"}
-                      </div>
-                    </div>
-                  )}
-                  <div
-                    className={`max-w-[75%] px-5 py-3 rounded-2xl shadow-lg transition-all duration-300 ${
-                      isMine
-                        ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-br-none"
-                        : darkMode
-                        ? "bg-slate-700 text-white rounded-bl-none"
-                        : "bg-white shadow-md text-slate-800 rounded-bl-none border border-slate-100"
-                    }`}
-                  >
-                    {!isMine && (
-                      <h4 className={`font-bold text-sm mb-1 ${
-                        darkMode ? "text-indigo-400" : "text-indigo-600"
-                      }`}>
-                        {msg.senderName || "Anonymous"}
-                      </h4>
-                    )}
-                    <p className="break-words leading-relaxed">{msg.text}</p>
-                    <div
-                      className={`text-xs mt-1.5 text-right ${
-                        isMine
-                          ? "text-blue-200"
-                          : darkMode
-                          ? "text-slate-400"
-                          : "text-slate-400"
-                      }`}
-                    >
-                      {msg.createdAt
-                        ?.toDate()
-                        .toLocaleString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+            <div className="space-y-4">
+              {Object.entries(messageGroups).map(([dateKey, msgs]) => (
+                <div key={dateKey}>
+                  {/* Date Divider */}
+                  <div className="flex items-center justify-center my-3">
+                    <div className={`px-4 py-1 rounded-full text-xs ${
+                      darkMode ? "bg-slate-700 text-slate-400" : "bg-slate-200 text-slate-500"
+                    }`}>
+                      {new Date(dateKey).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric"
+                      })}
                     </div>
                   </div>
+                  {msgs.map((msg) => {
+                    const isMine = msg.senderId?.startsWith("guest_");
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex mb-4 ${
+                          isMine ? "justify-end" : "justify-start"
+                        }`}
+                      >
+                        {!isMine && (
+                          <div className="flex-shrink-0 mr-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                              {msg.senderName?.charAt(0)?.toUpperCase() || "U"}
+                            </div>
+                          </div>
+                        )}
+                        <div
+                          className={`max-w-[75%] px-4 py-2.5 rounded-2xl shadow-md transition-all duration-200 ${
+                            isMine
+                              ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-br-sm"
+                              : darkMode
+                              ? "bg-slate-700 text-white rounded-bl-sm"
+                              : "bg-white shadow-md text-slate-800 rounded-bl-sm border border-slate-100"
+                          }`}
+                        >
+                          {!isMine && (
+                            <h4 className={`font-bold text-xs mb-0.5 ${
+                              darkMode ? "text-indigo-400" : "text-indigo-600"
+                            }`}>
+                              {msg.senderName || "Anonymous"}
+                            </h4>
+                          )}
+                          <div className="flex items-end gap-1.5 flex-wrap">
+                            <span className="text-sm leading-relaxed break-words">
+                              {msg.text}
+                            </span>
+                            <span className={`text-[10px] leading-none whitespace-nowrap ${
+                              isMine
+                                ? "text-blue-200"
+                                : darkMode
+                                ? "text-slate-400"
+                                : "text-slate-400"
+                            }`}>
+                              {formatMessageTime(msg.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })
+              ))}
+              <div ref={bottomRef} />
+            </div>
           )}
-          <div ref={bottomRef}></div>
         </div>
 
-        {/* Input Section - No login required */}
+        {/* Input Section */}
         <div className="flex gap-3">
           <input
             type="text"

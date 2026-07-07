@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
@@ -12,9 +12,12 @@ function ChatPage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [unreadCounts, setUnreadCounts] = useState({});
 
   useEffect(() => {
-    fetchUsers();
+    if (currentUser) {
+      fetchUsers();
+    }
   }, [currentUser]);
 
   const fetchUsers = async () => {
@@ -27,6 +30,23 @@ function ChatPage() {
         }))
         .filter((user) => user.id !== currentUser?.uid);
       setUsers(data);
+
+      const counts = {};
+      for (const user of data) {
+        const chatId = currentUser.uid < user.id 
+          ? currentUser.uid + user.id 
+          : user.id + currentUser.uid;
+        
+        const q = query(
+          collection(db, "messages"),
+          where("chatId", "==", chatId),
+          where("senderId", "==", user.id),
+          where("read", "==", false)
+        );
+        const snapshot = await getDocs(q);
+        counts[user.id] = snapshot.size;
+      }
+      setUnreadCounts(counts);
     } catch (error) {
       console.log(error);
     } finally {
@@ -34,9 +54,43 @@ function ChatPage() {
     }
   };
 
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const unsubscribeAll = users.map((user) => {
+      const chatId = currentUser.uid < user.id 
+        ? currentUser.uid + user.id 
+        : user.id + currentUser.uid;
+
+      const q = query(
+        collection(db, "messages"),
+        where("chatId", "==", chatId),
+        where("senderId", "==", user.id),
+        where("read", "==", false)
+      );
+
+      return onSnapshot(q, (snapshot) => {
+        setUnreadCounts(prev => ({
+          ...prev,
+          [user.id]: snapshot.size
+        }));
+      });
+    });
+
+    return () => {
+      unsubscribeAll.forEach(unsub => unsub && unsub());
+    };
+  }, [users, currentUser]);
+
   const filteredUsers = users.filter((user) =>
     user.name?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    const aUnread = unreadCounts[a.id] || 0;
+    const bUnread = unreadCounts[b.id] || 0;
+    return bUnread - aUnread;
+  });
 
   if (!currentUser) {
     return (
@@ -82,16 +136,9 @@ function ChatPage() {
               Chat privately with other members
             </p>
           </div>
-          <span className={`text-sm px-4 py-2 rounded-xl ${
-            darkMode
-              ? "bg-slate-800 text-slate-300"
-              : "bg-white shadow-md text-slate-600"
-          }`}>
-            👤 {users.length} members
-          </span>
+          {/* Member count removed */}
         </div>
 
-        {/* Search Users */}
         <div className="relative mb-5">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <span className="text-slate-400">🔍</span>
@@ -110,14 +157,13 @@ function ChatPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* User List */}
-          <div className={`lg:col-span-1 p-5 rounded-3xl transition-all duration-300 ${
+          <div className={`lg:col-span-1 p-4 rounded-3xl transition-all duration-300 ${
             darkMode
               ? "bg-slate-800/80 border border-white/5"
               : "bg-white/80 backdrop-blur-xl shadow-xl border border-white/20"
           }`}>
-            <div className="space-y-2 max-h-[500px] overflow-y-auto">
-              {filteredUsers.length === 0 ? (
+            <div className="space-y-1 max-h-[500px] overflow-y-auto">
+              {sortedUsers.length === 0 ? (
                 <div className={`text-center py-8 ${
                   darkMode ? "text-slate-400" : "text-slate-500"
                 }`}>
@@ -125,44 +171,56 @@ function ChatPage() {
                   <p className="text-sm">No users found</p>
                 </div>
               ) : (
-                filteredUsers.map((user) => (
-                  <div
-                    key={user.id}
-                    onClick={() => setSelectedUser(user)}
-                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 ${
-                      selectedUser?.id === user.id
-                        ? darkMode
-                          ? "bg-indigo-500/20 border border-indigo-500/30"
-                          : "bg-indigo-500/10 border border-indigo-500/20"
-                        : darkMode
-                        ? "hover:bg-slate-700/50"
-                        : "hover:bg-slate-100"
-                    }`}
-                  >
-                    <div className="relative flex-shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
-                        {user.name?.charAt(0)?.toUpperCase() || "U"}
+                sortedUsers.map((user) => {
+                  const unreadCount = unreadCounts[user.id] || 0;
+                  return (
+                    <div
+                      key={user.id}
+                      onClick={() => setSelectedUser(user)}
+                      className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 ${
+                        selectedUser?.id === user.id
+                          ? darkMode
+                            ? "bg-indigo-500/20 border border-indigo-500/30"
+                            : "bg-indigo-500/10 border border-indigo-500/20"
+                          : darkMode
+                          ? "hover:bg-slate-700/50"
+                          : "hover:bg-slate-100"
+                      }`}
+                    >
+                      <div className="relative flex-shrink-0">
+                        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
+                          {user.name?.charAt(0)?.toUpperCase() || "U"}
+                        </div>
                       </div>
-                      {/* Green dot removed */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className={`font-medium truncate ${
+                            darkMode ? "text-white" : "text-slate-800"
+                          }`}>
+                            {user.name}
+                          </p>
+                          {unreadCount > 0 && (
+                            <span className="ml-2 px-2 py-0.5 rounded-full bg-indigo-600 text-white text-xs font-bold min-w-[20px] text-center">
+                              {unreadCount}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium truncate ${
-                        darkMode ? "text-white" : "text-slate-800"
-                      }`}>
-                        {user.name}
-                      </p>
-                      {/* Email removed - only showing name */}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
 
-          {/* Chat Window */}
           <div className="lg:col-span-2">
             {selectedUser ? (
-              <ChatWindow user={selectedUser} />
+              <ChatWindow user={selectedUser} onMessageRead={() => {
+                setUnreadCounts(prev => ({
+                  ...prev,
+                  [selectedUser.id]: 0
+                }));
+              }} />
             ) : (
               <div className={`h-full min-h-[400px] flex flex-col items-center justify-center rounded-3xl transition-all duration-300 ${
                 darkMode

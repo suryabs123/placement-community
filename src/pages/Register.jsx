@@ -13,6 +13,13 @@ import { auth, db, googleProvider } from "../firebase/config";
 import { ThemeContext } from "../context/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
 
+// Allowed college email domains
+const ALLOWED_DOMAINS = [
+  "cambridge.edu.in",
+  "cambridge.edu",
+  // Add more college domains here if needed
+];
+
 function Register() {
   const { darkMode } = useContext(ThemeContext);
   const navigate = useNavigate();
@@ -23,9 +30,23 @@ function Register() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Check if email is from allowed domain
+  const isAllowedDomain = (email) => {
+    if (!email) return false;
+    const domain = email.split('@')[1];
+    return ALLOWED_DOMAINS.includes(domain);
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
+
+    // Validate college email
+    if (!isAllowedDomain(email)) {
+      setError("❌ Only college email addresses are allowed. Please use your @cambridge.edu.in email.");
+      return;
+    }
+
     try {
       setLoading(true);
       const userCredential = await createUserWithEmailAndPassword(
@@ -59,6 +80,14 @@ function Register() {
       setGoogleLoading(true);
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
+
+      // Check if the email domain is allowed
+      if (!isAllowedDomain(user.email)) {
+        setError("❌ Only college email addresses are allowed. Please use your @cambridge.edu.in email.");
+        await auth.signOut(); // Sign out immediately
+        setGoogleLoading(false);
+        return;
+      }
 
       // Check if user exists in Firestore
       const userDocRef = doc(db, "users", user.uid);
@@ -107,12 +136,15 @@ function Register() {
           </div>
           <h1 className="text-2xl font-bold text-[#6C63FF]">CIT Placement Community</h1>
           <p className={`text-sm mt-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
-            Create your account
+            Create your account with college email
+          </p>
+          <p className={`text-xs mt-1 ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
+            Only @cambridge.edu.in email addresses allowed
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm text-center">
             {error}
           </div>
         )}
@@ -138,11 +170,11 @@ function Register() {
 
           <div>
             <label className={`text-sm font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>
-              Email Address
+              College Email Address
             </label>
             <input
               type="email"
-              placeholder="you@example.com"
+              placeholder="yourname@cambridge.edu.in"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={`w-full mt-1.5 p-4 rounded-xl border-2 outline-none transition-all duration-300 ${
