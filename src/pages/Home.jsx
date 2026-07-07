@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import { db } from "../firebase/config";
 import { ThemeContext } from "../context/ThemeContext";
 import { AuthContext } from "../context/AuthContext";
+import Avatar from "../components/Avatar";
 
 function Home() {
   const { darkMode } = useContext(ThemeContext);
@@ -35,6 +36,7 @@ function Home() {
   const [popupTitle, setPopupTitle] = useState("");
   const [popupData, setPopupData] = useState([]);
   const [popupType, setPopupType] = useState("");
+  const [allUsers, setAllUsers] = useState([]);
 
   const popularTopics = [
     { name: "DSA", icon: "📊", color: "from-indigo-500 to-indigo-600" },
@@ -86,7 +88,7 @@ function Home() {
     return () => unsubscribe();
   }, []);
 
-  // Real-time users count
+  // Real-time users count - Store users in state
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -95,12 +97,11 @@ function Home() {
           id: doc.id,
           ...doc.data(),
         }));
+        setAllUsers(usersList);
         setStats(prev => ({
           ...prev,
-          users: usersSnapshot.size,
+          users: usersList.length,
         }));
-        // Store users for popup
-        setPopupData(usersList);
       } catch (error) {
         console.log(error);
       }
@@ -112,11 +113,11 @@ function Home() {
         id: doc.id,
         ...doc.data(),
       }));
+      setAllUsers(usersList);
       setStats(prev => ({
         ...prev,
-        users: snapshot.size,
+        users: usersList.length,
       }));
-      setPopupData(usersList);
     });
     return () => unsubscribe();
   }, []);
@@ -231,11 +232,18 @@ function Home() {
     };
   }, []);
 
-  // Handle stat card click - ONLY for Members and Asked Today
+  // Handle stat card click - FIXED: Always uses fresh data
   const handleStatClick = (type) => {
     if (type === "members") {
+      // Always use fresh allUsers data
+      const membersList = allUsers.map(user => ({
+        id: user.id,
+        name: user.name || "User",
+        email: user.email,
+      }));
       setPopupTitle("👥 Community Members");
       setPopupType("members");
+      setPopupData(membersList);
       setShowPopup(true);
     } else if (type === "today") {
       const today = new Date();
@@ -244,9 +252,14 @@ function Home() {
         const date = q.createdAt?.toDate();
         return date && date >= today;
       });
+      const todayList = todayQuestions.map(q => ({
+        id: q.id,
+        name: q.title,
+        subtitle: q.author,
+      }));
       setPopupTitle("📅 Today's Questions");
       setPopupType("today");
-      setPopupData(todayQuestions);
+      setPopupData(todayList);
       setShowPopup(true);
     }
   };
@@ -263,8 +276,8 @@ function Home() {
     } else if (popupType === "today") {
       return popupData.map(q => ({
         id: q.id,
-        name: q.title,
-        subtitle: q.author,
+        name: q.name,
+        subtitle: q.subtitle,
         icon: "📅"
       }));
     }
@@ -403,7 +416,6 @@ function Home() {
     return new Date(year, month).toLocaleString('default', { month: 'long' }) + ' ' + year;
   };
 
-  // Popup items
   const popupItems = getPopupItems();
 
   if (loading) {
@@ -416,7 +428,7 @@ function Home() {
 
   return (
     <div className={`min-h-screen ${darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"}`}>
-      {/* Hero Section - With College Image Background */}
+      {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -443,7 +455,7 @@ function Home() {
               </p>
             </div>
 
-            {/* Stats Cards - Clickable (Members & Asked Today only) */}
+            {/* Stats Cards */}
             <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
               <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
                 <div className="text-2xl font-bold text-white">{stats.total}</div>
@@ -472,13 +484,12 @@ function Home() {
         </div>
       </div>
 
-      {/* Stats Popup Modal */}
+      {/* Stats Popup Modal - FIXED */}
       {showPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className={`p-6 rounded-3xl max-w-md w-full mx-4 max-h-[80vh] flex flex-col ${
             darkMode ? "bg-slate-800 border border-slate-700/50" : "bg-white border border-white/20"
           }`}>
-            {/* Popup Header */}
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
               <h3 className={`text-xl font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>
                 {popupTitle}
@@ -488,9 +499,8 @@ function Home() {
               </span>
             </div>
             
-            {/* Popup Body - Scrollable */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-2">
-              {popupType === "members" && popupItems.length > 0 ? (
+              {popupItems.length > 0 ? (
                 popupItems.map((item, index) => (
                   <div 
                     key={item.id || index}
@@ -506,28 +516,7 @@ function Home() {
                         {item.name}
                       </p>
                       <p className={`text-xs truncate ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
-                        {item.email}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : popupType === "today" && popupItems.length > 0 ? (
-                popupItems.map((item, index) => (
-                  <div 
-                    key={item.id || index}
-                    className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${
-                      darkMode ? "hover:bg-slate-700/50" : "hover:bg-indigo-50"
-                    }`}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white text-sm flex-shrink-0">
-                      📅
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium truncate ${darkMode ? "text-white" : "text-slate-800"}`}>
-                        {item.name}
-                      </p>
-                      <p className={`text-xs truncate ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
-                        by {item.subtitle}
+                        {item.email || `by ${item.subtitle}`}
                       </p>
                     </div>
                   </div>
@@ -540,11 +529,11 @@ function Home() {
               )}
             </div>
             
-            {/* Close Button */}
             <button
               onClick={() => {
                 setShowPopup(false);
                 setPopupData([]);
+                setPopupType("");
               }}
               className="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/30 hover:scale-105"
             >
@@ -593,7 +582,7 @@ function Home() {
         </div>
       )}
 
-      {/* Main Content */}
+      {/* Main Content - Rest of the code remains the same */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left Sidebar */}
@@ -657,8 +646,6 @@ function Home() {
                               {q.title}
                             </p>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-indigo-500">👍 {q.upvotes || 0}</span>
-                              <span className="text-xs text-slate-400">•</span>
                               <span className="text-xs text-slate-400">{q.author}</span>
                             </div>
                           </div>
@@ -891,9 +878,11 @@ function Home() {
 
                         <div className="flex flex-wrap items-center gap-3 text-sm">
                           <div className="flex items-center gap-1.5">
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-bold">
-                              {question.author?.charAt(0)?.toUpperCase() || "A"}
-                            </div>
+                            <Avatar 
+                              user={{ id: question.authorId, name: question.author }}
+                              size="w-6 h-6"
+                              textSize="text-[10px]"
+                            />
                             <span className={darkMode ? "text-slate-300" : "text-slate-600"}>
                               {question.author}
                             </span>
@@ -928,7 +917,6 @@ function Home() {
           {/* Right Sidebar */}
           <div className="lg:col-span-1 order-3">
             <div className="space-y-5 sticky top-24">
-              {/* Quick Actions */}
               <div className={`p-5 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
                 <h3 className={`font-bold text-sm uppercase tracking-wider mb-3 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                   Quick Actions
@@ -953,7 +941,6 @@ function Home() {
                 </div>
               </div>
 
-              {/* Community Stats */}
               <div className={`p-5 rounded-2xl ${darkMode ? "bg-slate-800/80 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-lg border border-white/50"}`}>
                 <h3 className={`font-bold text-sm uppercase tracking-wider mb-3 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                   📊 Community Stats

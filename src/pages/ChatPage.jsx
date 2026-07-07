@@ -4,6 +4,7 @@ import { db } from "../firebase/config";
 import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
 import ChatWindow from "../components/ChatWindow";
+import Avatar from "../components/Avatar";
 
 function ChatPage() {
   const { currentUser } = useContext(AuthContext);
@@ -136,7 +137,6 @@ function ChatPage() {
               Chat privately with other members
             </p>
           </div>
-          {/* Member count removed */}
         </div>
 
         <div className="relative mb-5">
@@ -187,11 +187,12 @@ function ChatPage() {
                           : "hover:bg-slate-100"
                       }`}
                     >
-                      <div className="relative flex-shrink-0">
-                        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
-                          {user.name?.charAt(0)?.toUpperCase() || "U"}
-                        </div>
-                      </div>
+                      {/* Avatar - Clickable */}
+                      <Avatar 
+                        user={{ id: user.id, name: user.name }}
+                        size="w-11 h-11"
+                        textSize="text-sm"
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <p className={`font-medium truncate ${

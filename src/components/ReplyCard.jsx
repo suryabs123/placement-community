@@ -1,5 +1,6 @@
 import { useContext } from "react";
 import { ThemeContext } from "../context/ThemeContext";
+import Avatar from "./Avatar";
 
 function ReplyCard({ reply, onDelete, onReport, currentUser }) {
   const { darkMode } = useContext(ThemeContext);
@@ -22,9 +23,12 @@ function ReplyCard({ reply, onDelete, onReport, currentUser }) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-              {reply.author?.charAt(0)?.toUpperCase() || "U"}
-            </div>
+            {/* Avatar - Clickable */}
+            <Avatar 
+              user={{ id: reply.authorId, name: reply.author }}
+              size="w-8 h-8"
+              textSize="text-xs"
+            />
             <div>
               <h4 className={`font-semibold text-sm ${
                 darkMode ? "text-white" : "text-slate-800"

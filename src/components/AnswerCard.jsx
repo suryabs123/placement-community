@@ -14,6 +14,7 @@ import { db } from "../firebase/config";
 import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
 import ReplyCard from "./ReplyCard";
+import Avatar from "./Avatar";
 
 function AnswerCard({ answer, onDeleteAnswer }) {
   const { currentUser } = useContext(AuthContext);
@@ -29,7 +30,7 @@ function AnswerCard({ answer, onDeleteAnswer }) {
 
   const isAnswerAuthor = currentUser && answer.authorId === currentUser.uid;
 
-  // ✅ REAL-TIME replies listener using onSnapshot
+  // REAL-TIME replies listener
   useEffect(() => {
     const q = query(
       collection(db, "replies"),
@@ -42,8 +43,6 @@ function AnswerCard({ answer, onDeleteAnswer }) {
         ...doc.data(),
       }));
       setReplies(data);
-    }, (error) => {
-      console.log("Error fetching replies:", error);
     });
     return () => unsubscribe();
   }, [answer.id]);
@@ -65,7 +64,6 @@ function AnswerCard({ answer, onDeleteAnswer }) {
       });
       setReplyText("");
       setShowReplyForm(false);
-      // ✅ onSnapshot will update automatically - NO RELOAD NEEDED
     } catch (error) {
       console.log(error);
       alert("Failed to add reply");
@@ -80,7 +78,6 @@ function AnswerCard({ answer, onDeleteAnswer }) {
     if (window.confirm("Are you sure you want to delete this reply?")) {
       try {
         await deleteDoc(doc(db, "replies", replyId));
-        // ✅ onSnapshot will update automatically - NO RELOAD NEEDED
       } catch (error) {
         console.log(error);
         alert("Failed to delete reply");
@@ -172,9 +169,12 @@ function AnswerCard({ answer, onDeleteAnswer }) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-            {answer.author?.charAt(0)?.toUpperCase() || "A"}
-          </div>
+          {/* Avatar - Clickable */}
+          <Avatar 
+            user={{ id: answer.authorId, name: answer.author }}
+            size="w-10 h-10"
+            textSize="text-sm"
+          />
           <div>
             <h3 className={`font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>
               {answer.author}
@@ -263,7 +263,7 @@ function AnswerCard({ answer, onDeleteAnswer }) {
         </form>
       )}
 
-      {/* Replies - REAL-TIME */}
+      {/* Replies */}
       {replies.length > 0 && (
         <>
           <h4 className={`font-bold mb-4 flex items-center gap-2 ${

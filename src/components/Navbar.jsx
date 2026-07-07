@@ -4,6 +4,7 @@ import { ThemeContext } from "../context/ThemeContext";
 import { AuthContext } from "../context/AuthContext";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase/config";
+import Avatar from "./Avatar";
 
 function Navbar() {
   const { darkMode, toggleTheme } = useContext(ThemeContext);
@@ -34,10 +35,10 @@ function Navbar() {
 
   const navLinks = [
     { to: "/", label: "Home" },
-    { to: "/ask", label: "Ask" },
+    { to: "/ask", label: "Ask"},
     { to: "/myquestions", label: "My Questions" },
-    { to: "/publicchat", label: "Chat"},
-    { to: "/chat", label: "Private" },
+    { to: "/publicchat", label: "Chat", },
+    { to: "/chat", label: "Private"},
     { to: "/notifications", label: "Alerts" },
     { to: "/profile", label: "Profile"},
     { to: "/support", label: "Support" },
@@ -120,9 +121,12 @@ function Navbar() {
             ) : (
               <div className="flex items-center gap-1 sm:gap-2">
                 <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 transition-all duration-300 hover:scale-105">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-indigo-500/25">
-                    {currentUser.displayName?.charAt(0)?.toUpperCase() || "U"}
-                  </div>
+                  {/* Avatar - Clickable */}
+                  <Avatar 
+                    user={{ id: currentUser.uid, name: currentUser.displayName }}
+                    size="w-7 h-7"
+                    textSize="text-xs"
+                  />
                   <span className="text-xs font-medium text-slate-700 dark:text-slate-300 hidden md:block">
                     {currentUser.displayName?.split(" ")[0] || "User"}
                   </span>
@@ -137,8 +141,6 @@ function Navbar() {
                 </button>
               </div>
             )}
-
-            
 
             <button
               onClick={toggleTheme}
@@ -213,7 +215,12 @@ function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300"
             >
-             
+              <img 
+                src="/chitchat.png" 
+                alt="ChitChat" 
+                className="w-6 h-6 object-contain"
+              />
+              <span>ChitChat</span>
             </Link>
 
             {!currentUser ? (
