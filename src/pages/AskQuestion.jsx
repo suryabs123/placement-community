@@ -53,7 +53,7 @@ function AskQuestion() {
       setTitle("");
       setDescription("");
       setSelectedTopics([]);
-      setSuccess("✅ Question posted successfully!");
+      setSuccess(" Question posted successfully!");
       setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
       console.log(error);

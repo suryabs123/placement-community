@@ -167,7 +167,7 @@ function Support() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-indigo-600 dark:text-indigo-400">
-            🆘 Support Center
+             Support Center
           </h1>
           <p className={`text-sm mt-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
             Get help with your placement journey
