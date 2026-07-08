@@ -34,14 +34,14 @@ function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   const navLinks = [
-    { to: "/", label: "Home" },
-    { to: "/ask", label: "Ask", },
-    { to: "/myquestions", label: "My Questions" },
+    { to: "/", label: "Home",  },
+    { to: "/ask", label: "Ask" },
+    { to: "/myquestions", label: "My Questions", },
     { to: "/publicchat", label: "Chat" },
     { to: "/chat", label: "Private" },
     { to: "/notifications", label: "Alerts" },
-    { to: "/profile", label: "Profile" },
-    { to: "/support", label: "Support" },
+    { to: "/profile", label: "Profile"},
+    { to: "/support", label: "Support"},
   ];
 
   return (
@@ -178,7 +178,7 @@ function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu - Enhanced Design */}
+      {/* Mobile Menu - Updated: Removed ChitChat LIVE & Duplicate Sign In/Get Started */}
       <div
         className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out ${
           mobileMenuOpen ? "max-h-[700px] opacity-100 translate-y-0" : "max-h-0 opacity-0 -translate-y-4"
@@ -230,37 +230,15 @@ function Navbar() {
               </Link>
             ))}
             
-            {/* Mobile ChitChat Logo - Enhanced */}
-            <Link
-              to="/publicchat"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-[1.02]"
-            >
-              <img 
-                src="/chitchat.png" 
-                alt="ChitChat" 
-                className="w-6 h-6 object-contain"
-              />
-              <span className="flex-1">ChitChat</span>
-              <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">LIVE</span>
-            </Link>
+            {/* 🔥 REMOVED: ChitChat LIVE section - completely deleted */}
+            {/* 🔥 REMOVED: Duplicate Sign In & Get Started buttons - they're already in the top navbar */}
 
             {!currentUser ? (
-              <div className="pt-4 mt-2 border-t border-slate-200 dark:border-slate-700 space-y-2">
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block text-center px-4 py-3.5 rounded-xl text-sm font-semibold text-indigo-600 dark:text-indigo-400 border-2 border-indigo-600/20 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all duration-300 hover:scale-105"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block text-center px-4 py-3.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-105"
-                >
-                  Get Started
-                </Link>
+              <div className="pt-4 mt-2 border-t border-slate-200 dark:border-slate-700">
+                <p className="text-center text-xs text-slate-500 dark:text-slate-400 mb-2">
+                  👋 Welcome! Sign in to access all features
+                </p>
+                {/* Sign In & Get Started removed from here - they're in the top navbar */}
               </div>
             ) : (
               <div className="pt-4 mt-2 border-t border-slate-200 dark:border-slate-700">
