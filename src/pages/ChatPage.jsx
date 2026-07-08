@@ -1,5 +1,6 @@
 import { useEffect, useState, useContext } from "react";
 import { collection, getDocs, query, where, onSnapshot } from "firebase/firestore";
+import { useLocation } from "react-router-dom";
 import { db } from "../firebase/config";
 import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
@@ -9,6 +10,7 @@ import Avatar from "../components/Avatar";
 function ChatPage() {
   const { currentUser } = useContext(AuthContext);
   const { darkMode } = useContext(ThemeContext);
+  const location = useLocation();
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [search, setSearch] = useState("");
@@ -20,6 +22,13 @@ function ChatPage() {
       fetchUsers();
     }
   }, [currentUser]);
+
+  // Check if user came from profile page with selectedUser
+  useEffect(() => {
+    if (location.state?.selectedUser) {
+      setSelectedUser(location.state.selectedUser);
+    }
+  }, [location.state]);
 
   const fetchUsers = async () => {
     try {

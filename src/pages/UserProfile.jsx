@@ -56,6 +56,13 @@ function UserProfile() {
     navigate("/");
   };
 
+  // Handle message button - redirect to private chat
+  const handleMessage = () => {
+    // Navigate to chat page and pass the user as selected user
+    // We'll use state to pass the user data
+    navigate("/chat", { state: { selectedUser: userData } });
+  };
+
   if (!currentUser) {
     return null; // Will redirect to login
   }
@@ -90,6 +97,9 @@ function UserProfile() {
       </div>
     );
   }
+
+  // Don't show message button for own profile
+  const isOwnProfile = currentUser.uid === userId;
 
   return (
     <div className={`min-h-screen pt-24 pb-8 px-4 sm:px-8 ${
@@ -142,14 +152,33 @@ function UserProfile() {
             {/* Divider */}
             <div className={`w-full h-px my-5 ${darkMode ? "bg-slate-700" : "bg-gray-200"}`}></div>
 
-            {/* Back to Home Button */}
-            <div className="w-full">
+            {/* Buttons - Back to Home & Message */}
+            <div className="w-full flex flex-col sm:flex-row gap-3">
+              {/* Back to Home Button */}
               <button 
                 onClick={handleBackToHome}
-                className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-center font-semibold transition-all duration-300"
+                className={`flex-1 py-3.5 px-4 rounded-2xl text-center font-semibold transition-all duration-300 ${
+                  darkMode
+                    ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/25"
+                    : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg hover:shadow-indigo-500/30 text-white"
+                } hover:scale-[1.02]`}
               >
                 🏠 Back to Home
               </button>
+              
+              {/* Message Button - Only show if not own profile */}
+              {!isOwnProfile && (
+                <button 
+                  onClick={handleMessage}
+                  className={`flex-1 py-3.5 px-4 rounded-2xl text-center font-semibold transition-all duration-300 ${
+                    darkMode
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25"
+                      : "bg-gradient-to-r from-emerald-500 to-teal-500 hover:shadow-lg hover:shadow-emerald-500/30 text-white"
+                  } hover:scale-[1.02] flex items-center justify-center gap-2`}
+                >
+                  <span>💬</span> Message
+                </button>
+              )}
             </div>
           </div>
         </div>
