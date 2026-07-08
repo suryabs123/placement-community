@@ -35,12 +35,12 @@ function Navbar() {
 
   const navLinks = [
     { to: "/", label: "Home" },
-    { to: "/ask", label: "Ask"},
+    { to: "/ask", label: "Ask", },
     { to: "/myquestions", label: "My Questions" },
-    { to: "/publicchat", label: "Chat", },
-    { to: "/chat", label: "Private"},
+    { to: "/publicchat", label: "Chat" },
+    { to: "/chat", label: "Private" },
     { to: "/notifications", label: "Alerts" },
-    { to: "/profile", label: "Profile"},
+    { to: "/profile", label: "Profile" },
     { to: "/support", label: "Support" },
   ];
 
@@ -121,7 +121,6 @@ function Navbar() {
             ) : (
               <div className="flex items-center gap-1 sm:gap-2">
                 <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 transition-all duration-300 hover:scale-105">
-                  {/* Avatar - Clickable */}
                   <Avatar 
                     user={{ id: currentUser.uid, name: currentUser.displayName }}
                     size="w-7 h-7"
@@ -160,22 +159,26 @@ function Navbar() {
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-300 hover:scale-110"
+              className="lg:hidden relative w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-300 flex items-center justify-center"
               aria-label="Toggle menu"
             >
-              <svg className="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {mobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
+              <div className="w-5 h-5 relative">
+                <span className={`absolute block h-0.5 bg-current transform transition-all duration-300 ease-in-out ${
+                  mobileMenuOpen ? 'rotate-45 top-1/2 -translate-y-1/2' : 'top-1'
+                } w-full`}></span>
+                <span className={`absolute block h-0.5 bg-current transition-all duration-300 ease-in-out ${
+                  mobileMenuOpen ? 'opacity-0' : 'opacity-100'
+                } top-1/2 -translate-y-1/2 w-full`}></span>
+                <span className={`absolute block h-0.5 bg-current transform transition-all duration-300 ease-in-out ${
+                  mobileMenuOpen ? '-rotate-45 top-1/2 -translate-y-1/2' : 'bottom-1'
+                } w-full`}></span>
+              </div>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Enhanced Design */}
       <div
         className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out ${
           mobileMenuOpen ? "max-h-[700px] opacity-100 translate-y-0" : "max-h-0 opacity-0 -translate-y-4"
@@ -186,13 +189,31 @@ function Navbar() {
             ? "bg-slate-900/95 border-slate-700/50 shadow-slate-900/50" 
             : "bg-white/95 border-slate-200/50 shadow-xl"
         }`}>
+          {/* User Profile Header in Mobile Menu */}
+          {currentUser && (
+            <div className="flex items-center gap-3 pb-4 mb-3 border-b border-slate-200 dark:border-slate-700">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-lg font-bold shadow-lg">
+                {currentUser.displayName?.charAt(0)?.toUpperCase() || "U"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-slate-800 dark:text-white truncate">
+                  {currentUser.displayName || "User"}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                  {currentUser.email}
+                </p>
+              </div>
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+            </div>
+          )}
+
           <div className="space-y-1">
             {navLinks.map((link, index) => (
               <Link
                 key={link.to}
                 to={link.to}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-300 ${
                   isActive(link.to)
                     ? "bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-600 dark:text-indigo-400 shadow-lg shadow-indigo-500/10 scale-[1.02]"
                     : "text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-slate-800/50 hover:scale-[1.02]"
@@ -209,45 +230,46 @@ function Navbar() {
               </Link>
             ))}
             
-            {/* Mobile ChitChat Logo */}
+            {/* Mobile ChitChat Logo - Enhanced */}
             <Link
               to="/publicchat"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300"
+              className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-[1.02]"
             >
               <img 
                 src="/chitchat.png" 
                 alt="ChitChat" 
                 className="w-6 h-6 object-contain"
               />
-              <span>ChitChat</span>
+              <span className="flex-1">ChitChat</span>
+              <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">LIVE</span>
             </Link>
 
             {!currentUser ? (
-              <div className="pt-4 border-t border-slate-200 dark:border-slate-700 space-y-2">
+              <div className="pt-4 mt-2 border-t border-slate-200 dark:border-slate-700 space-y-2">
                 <Link
                   to="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block text-center px-4 py-3 rounded-xl text-sm font-semibold text-indigo-600 dark:text-indigo-400 border-2 border-indigo-600/20 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all duration-300 hover:scale-105"
+                  className="block text-center px-4 py-3.5 rounded-xl text-sm font-semibold text-indigo-600 dark:text-indigo-400 border-2 border-indigo-600/20 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all duration-300 hover:scale-105"
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block text-center px-4 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-105"
+                  className="block text-center px-4 py-3.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-105"
                 >
                   Get Started
                 </Link>
               </div>
             ) : (
-              <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div className="pt-4 mt-2 border-t border-slate-200 dark:border-slate-700">
                 <button
                   onClick={() => {
                     handleLogout();
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-rose-500 border-2 border-rose-500/20 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-all duration-300 hover:scale-105"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-sm font-semibold text-rose-500 border-2 border-rose-500/20 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-all duration-300 hover:scale-105"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
