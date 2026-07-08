@@ -1,10 +1,30 @@
 import { Link } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 function Avatar({ user, size = "w-10 h-10", textSize = "text-sm", showName = false }) {
+  const { currentUser } = useContext(AuthContext);
+  
   const getInitials = (name) => {
     if (!name) return "U";
     return name.charAt(0).toUpperCase();
   };
+
+  // If user is not logged in, show avatar without link
+  if (!currentUser) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className={`${size} rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white ${textSize} font-bold shadow-lg cursor-default`}>
+          {getInitials(user.name)}
+        </div>
+        {showName && (
+          <span className="text-sm font-medium text-slate-400">
+            {user.name}
+          </span>
+        )}
+      </div>
+    );
+  }
 
   return (
     <Link to={`/profile/${user.id}`} className="flex items-center gap-2 group">

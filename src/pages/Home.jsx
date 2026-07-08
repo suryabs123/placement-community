@@ -88,7 +88,7 @@ function Home() {
     return () => unsubscribe();
   }, []);
 
-  // Real-time users count - Store users in state
+  // Real-time users count
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -232,10 +232,9 @@ function Home() {
     };
   }, []);
 
-  // Handle stat card click - FIXED: Always uses fresh data
+  // Handle stat card click
   const handleStatClick = (type) => {
     if (type === "members") {
-      // Always use fresh allUsers data
       const membersList = allUsers.map(user => ({
         id: user.id,
         name: user.name || "User",
@@ -264,7 +263,6 @@ function Home() {
     }
   };
 
-  // Get data for popup based on type
   const getPopupItems = () => {
     if (popupType === "members") {
       return popupData.map(user => ({
@@ -455,7 +453,6 @@ function Home() {
               </p>
             </div>
 
-            {/* Stats Cards */}
             <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
               <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-4 text-center border border-white/10 hover:bg-white/30 transition-all duration-300 hover:scale-105">
                 <div className="text-2xl font-bold text-white">{stats.total}</div>
@@ -484,7 +481,7 @@ function Home() {
         </div>
       </div>
 
-      {/* Stats Popup Modal - FIXED */}
+      {/* Stats Popup Modal */}
       {showPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className={`p-6 rounded-3xl max-w-md w-full mx-4 max-h-[80vh] flex flex-col ${
@@ -582,7 +579,7 @@ function Home() {
         </div>
       )}
 
-      {/* Main Content - Rest of the code remains the same */}
+      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left Sidebar */}

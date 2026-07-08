@@ -33,7 +33,7 @@ function Profile() {
     const params = new URLSearchParams(window.location.search);
     const success = params.get('success');
     if (success === 'true') {
-      alert("Profile updated successfully! ✅");
+      alert("Profile updated successfully! ");
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);

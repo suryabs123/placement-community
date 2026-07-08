@@ -14,6 +14,12 @@ function UserProfile() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Redirect to login if not logged in
+    if (!currentUser) {
+      navigate("/login");
+      return;
+    }
+
     const fetchUserProfile = async () => {
       try {
         const docRef = doc(db, "users", userId);
@@ -28,7 +34,7 @@ function UserProfile() {
       }
     };
     fetchUserProfile();
-  }, [userId]);
+  }, [userId, currentUser, navigate]);
 
   // Format date properly
   const formatDate = (timestamp) => {
@@ -49,6 +55,10 @@ function UserProfile() {
   const handleBackToHome = () => {
     navigate("/");
   };
+
+  if (!currentUser) {
+    return null; // Will redirect to login
+  }
 
   if (loading) {
     return (
@@ -86,7 +96,7 @@ function UserProfile() {
       darkMode ? "bg-slate-900" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50/30"
     }`}>
       <div className="max-w-2xl mx-auto">
-        {/* Card - Exactly like Profile.jsx */}
+        {/* Card */}
         <div className={`rounded-3xl p-6 sm:p-8 ${
           darkMode ? "bg-slate-800/90 border border-slate-700/50" : "bg-white/90 backdrop-blur-sm shadow-2xl border border-white/50"
         }`}>
@@ -109,7 +119,7 @@ function UserProfile() {
               {userData?.email}
             </p>
 
-            {/* Member Since - Added like Profile.jsx style */}
+            {/* Member Since */}
             <p className={`text-xs mt-1 ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
               📅 Member since {formatDate(userData?.createdAt)}
             </p>
@@ -132,7 +142,7 @@ function UserProfile() {
             {/* Divider */}
             <div className={`w-full h-px my-5 ${darkMode ? "bg-slate-700" : "bg-gray-200"}`}></div>
 
-            {/* Back to Home Button - Using button with onClick */}
+            {/* Back to Home Button */}
             <div className="w-full">
               <button 
                 onClick={handleBackToHome}

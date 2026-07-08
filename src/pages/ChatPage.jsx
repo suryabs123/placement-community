@@ -187,7 +187,6 @@ function ChatPage() {
                           : "hover:bg-slate-100"
                       }`}
                     >
-                      {/* Avatar - Clickable */}
                       <Avatar 
                         user={{ id: user.id, name: user.name }}
                         size="w-11 h-11"
